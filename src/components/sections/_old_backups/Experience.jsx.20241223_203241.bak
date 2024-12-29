@@ -1,0 +1,236 @@
+import React, { useState } from 'react';
+import { Briefcase, ChevronDown, ChevronUp, Building2, MapPin, Calendar } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+
+const Experience = ({ theme }) => {
+  const [expandedJob, setExpandedJob] = useState(null);
+
+  const jobs = [
+    {
+      id: 1,
+      title: "IT Support Lead / Systems Coordinator",
+      company: "Federal Direct",
+      location: "Little Falls, New Jersey",
+      period: "February 2023 - July 2024",
+      type: "Full-time",
+      highlights: [
+        "Led IT support efforts for 60+ employees, serving as primary point of contact for technical issues",
+        "Worked with Cisco Meraki networking solutions, including configuration and maintenance",
+        "Managed incidents using Zendesk, ensuring timely resolution and root cause analysis",
+        "Utilized monitoring tools like ContentCatcher and N-Able for system performance",
+        "Worked with Access and MSSQL databases to troubleshoot data-related issues",
+        "Utilized AI tools for Python, Bash, PowerShell, and VBA scripting automation",
+        "Troubleshot and maintained Excel VBA macros for accounting workflows",
+        "Managed EDI data transactions for direct mail marketing customer orders"
+      ],
+      technologies: ["Cisco Meraki", "Zendesk", "PowerShell", "Python", "VBA", "MSSQL", "Access", "EDI"]
+    },
+    {
+      id: 2,
+      title: "Technical Support Lead / Systems Administrator",
+      company: "Quercus Technologies",
+      location: "Lyndhurst, New Jersey",
+      period: "May 2016 - December 2022",
+      type: "Full-time",
+      highlights: [
+        "Served as sole IT support professional for US office, managing all technical operations",
+        "Provided advanced technical support for complex client issues",
+        "Managed software updates and hardware integration",
+        "Documented projects using Trello and Jira for enhanced collaboration",
+        "Generated training content for internal and external clients",
+        "Implemented various networking protocols and managed infrastructure",
+        "Updated and created departmental knowledge base content",
+        "Supported and troubleshot web applications",
+        "Managed network protocols including TCP/IP, IPv4, DNS, ARP"
+      ],
+      technologies: ["Trello", "Jira", "TCP/IP", "DNS", "Network Infrastructure", "Knowledge Base Management"]
+    },
+    {
+      id: 3,
+      title: "Technical Support Specialist Level II",
+      company: "Earthcam",
+      location: "Hackensack, New Jersey",
+      period: "August 2012 - August 2015",
+      type: "Full-time",
+      highlights: [
+        "Managed Level 1 and client escalation tickets",
+        "Configured client local area networks and webcam systems",
+        "Set up port forwarding rules and network components",
+        "Verified system configurations for image transfer and streaming",
+        "Configured complex network setups including wireless radios",
+        "Managed solar-powered webcam installations",
+        "Utilized monitoring tools for system performance analysis"
+      ],
+      technologies: ["Network Configuration", "Port Forwarding", "Wireless Systems", "Monitoring Tools"]
+    },
+    {
+      id: 4,
+      title: "Help Desk Support",
+      company: "GMA Accessories/Capelli New York",
+      location: "South Hackensack, New Jersey",
+      period: "October 2011 - June 2012",
+      type: "Full-time",
+      highlights: [
+        "Provided technical support for store and corporate employees",
+        "Managed user accounts through Windows Server",
+        "Created technical documentation and step-by-step guides",
+        "Used remote desktop tools for efficient support",
+        "Managed IT equipment inventory",
+        "Coordinated with service providers for new store setups",
+        "Assisted with application deployment via OneDrive Office 365",
+        "Implemented and maintained CCTV camera systems"
+      ],
+      technologies: ["Windows Server", "Remote Desktop", "Office 365", "CCTV Systems"]
+    },
+    {
+      id: 5,
+      title: "Technical Support Specialist",
+      company: "Touchstone Management",
+      location: "Parsippany, NJ",
+      period: "March 2011 - July 2011",
+      type: "Full-time",
+      highlights: [
+        "Supported staff and clients through helpdesk system",
+        "Installed and configured software and hardware",
+        "Optimized system performance and removed malware",
+        "Monitored Windows Servers and Symantec backups",
+        "Managed user accounts and permissions",
+        "Troubleshot Avaya VOIP system",
+        "Set up Microsoft Exchange accounts",
+        "Worked with HTML and CSS on company website"
+      ],
+      technologies: ["Windows Server", "Symantec", "VOIP", "Microsoft Exchange", "HTML", "CSS"]
+    },
+    {
+      id: 6,
+      title: "Personal Computer Technician",
+      company: "Robert Half Technology",
+      location: "Princeton, NJ",
+      period: "February 2011 - March 2011",
+      type: "Contract",
+      highlights: [
+        "Provided on-site technical support for system migration",
+        "Installed and configured new peripherals",
+        "Verified operational status of computers",
+        "Managed decommissioning process for old equipment",
+        "Safely shut down servers and packaged hard drives",
+        "Worked efficiently in time-sensitive environment"
+      ],
+      technologies: ["System Migration", "Hardware Installation", "Asset Management"]
+    }
+  ];
+
+  const toggleJob = (id) => {
+    setExpandedJob(expandedJob === id ? null : id);
+  };
+
+  return (
+    <section id="experience" className={`py-20 px-4 ${theme === 'dark' ? 'bg-gray-800/50' : 'bg-gray-100'}`}>
+      <div className="max-w-6xl mx-auto">
+        <h2 className="text-3xl font-bold mb-8 text-center">Professional Experience</h2>
+        
+        <div className="space-y-6 relative">
+          {/* Timeline line */}
+          <div className="absolute left-8 top-10 bottom-10 w-0.5 bg-blue-500/20 hidden md:block"></div>
+
+          {jobs.map((job, index) => (
+            <Card 
+              key={job.id}
+              className={`${theme === 'dark' ? 'bg-gray-900/50 border-gray-700' : 'bg-white border-gray-200'} 
+                         transition-all duration-300 hover:shadow-lg relative
+                         ${expandedJob === job.id ? 'ring-2 ring-blue-500 ring-opacity-50' : ''}`}
+            >
+              {/* Timeline dot */}
+              <div className={`absolute left-8 -ml-2.5 w-5 h-5 rounded-full 
+                             ${expandedJob === job.id ? 'bg-blue-500 scale-125' : 'bg-blue-400'}
+                             transition-all duration-300 hidden md:block mt-8 z-10`}>
+                {index === 0 && <div className="absolute -top-1 -left-1 w-7 h-7 rounded-full bg-blue-500 opacity-50 animate-ping"></div>}
+              </div>
+
+              <CardContent className="p-6 md:ml-12">
+                <div 
+                  className="flex items-start justify-between cursor-pointer group"
+                  onClick={() => toggleJob(job.id)}
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3">
+                      <Briefcase className={`h-5 w-5 ${expandedJob === job.id ? 'text-blue-500' : 'text-gray-400'} 
+                                           transition-colors duration-300`} />
+                      <h3 className="text-xl font-semibold group-hover:text-blue-500 transition-colors duration-300">
+                        {job.title}
+                      </h3>
+                    </div>
+                    <div className="mt-2 space-y-1">
+                      <div className="flex items-center gap-2">
+                        <Building2 className="h-4 w-4 text-gray-400" />
+                        <p className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>
+                          {job.company}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-gray-400" />
+                        <p className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>
+                          {job.location}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-gray-400" />
+                        <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                          {job.period}
+                          <span className="ml-2 px-2 py-0.5 rounded-full text-xs bg-blue-500/10 text-blue-500">
+                            {job.type}
+                          </span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <button 
+                    className={`p-2 rounded-full transition-all duration-300 ${
+                      theme === 'dark' ? 'hover:bg-gray-800' : 'hover:bg-gray-100'
+                    } ${expandedJob === job.id ? 'rotate-180 bg-blue-500/10' : ''}`}
+                    aria-label={expandedJob === job.id ? "Collapse details" : "Expand details"}
+                  >
+                    <ChevronDown className={`h-5 w-5 ${expandedJob === job.id ? 'text-blue-500' : ''}`} />
+                  </button>
+                </div>
+                
+                {expandedJob === job.id && (
+                  <div className="mt-6 pl-8 space-y-4 animate-fadeIn">
+                    <div>
+                      <h4 className="font-semibold mb-2">Key Responsibilities & Achievements</h4>
+                      <ul className={`list-disc space-y-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+                        {job.highlights.map((highlight, index) => (
+                          <li key={index} className="ml-4 hover:text-blue-500 transition-colors duration-200">
+                            {highlight}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-2">Technologies & Tools</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {job.technologies.map((tech, index) => (
+                          <span 
+                            key={index}
+                            className={`px-3 py-1 rounded-full text-sm transition-all duration-200
+                              ${theme === 'dark' 
+                                ? 'bg-blue-500/10 text-blue-400 hover:bg-blue-500/20' 
+                                : 'bg-blue-100 text-blue-800 hover:bg-blue-200'}`}
+                          >
+                            {tech}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default Experience;

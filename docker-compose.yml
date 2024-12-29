@@ -1,0 +1,14 @@
+services:
+  portfolio-server:
+    build: .
+    container_name: portfolio-server
+    network_mode: "bridge"
+    ports:
+      - "3002:3002"
+      - "3003:3003"
+    environment:
+      - NODE_ENV=production
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    volumes:
+      - ./data:/usr/src/app/data
+    restart: unless-stopped
