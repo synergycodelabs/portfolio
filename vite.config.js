@@ -4,8 +4,7 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [react()],
-  // Use conditional base path depending on environment
-  base: process.env.NODE_ENV === 'production' ? '/portfolio/' : '/',
+  base: '/portfolio/',  // Change this line
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
