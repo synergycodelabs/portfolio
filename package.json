@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev-server": "node server/start-server.cjs",
     "build": "vite build",
     "preview": "vite preview",
     "predeploy": "npm run build",
