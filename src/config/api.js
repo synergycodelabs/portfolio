@@ -1,15 +1,22 @@
-const apiConfig = {
+export const getApiUrl = (endpoint) => {
+  const baseUrl = import.meta.env.PROD
+    ? 'https://api.synergycodelabs.com:8444'
+    : 'http://localhost:3002';
+  
+  const endpoints = {
+    status: '/api/status',
+    chat: '/api/chat'
+  };
+  
+  return `${baseUrl}${endpoints[endpoint]}`;
+};
+
+export default {
   baseUrl: import.meta.env.PROD
-    ? 'https://api.synergycodelabs.com:8444/api'
-    : 'http://localhost:3004/api',
+    ? 'https://api.synergycodelabs.com:8444'
+    : 'http://localhost:3002',
   endpoints: {
     status: '/api/status',
     chat: '/api/chat'
   }
 };
-
-export const getApiUrl = (endpoint) => {
-  return `${apiConfig.baseUrl}${apiConfig.endpoints[endpoint]}`;
-};
-
-export default apiConfig;

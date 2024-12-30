@@ -3,8 +3,19 @@ import { MessageCircle, X, Send, Loader2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { getApiUrl } from '@/config/api';
-import { isBusinessHours, getNextAvailableTime, formatBusinessHours } from '@/utils/businessHours';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { checkServerConnection, sendChatMessage } from '@/utils/connectionHelper';
+import { isBusinessHours } from '@/utils/businessHours';
+import ChatStatus from './ChatStatus';
+import ErrorBoundary from './common/ErrorBoundary';
+
+const RETRY_INTERVAL = 30000; // 30 seconds
+const MAX_RETRIES = 3;
+
+const WELCOME_MESSAGE = {
+  role: 'assistant',
+  content: 'Hi! How can I help you today?'
+};
 
 const FloatingChatBot = ({ theme = 'dark' }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -12,84 +23,99 @@ const FloatingChatBot = ({ theme = 'dark' }) => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [serverStatus, setServerStatus] = useState('checking');
+  const [retryCount, setRetryCount] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const messagesEndRef = useRef(null);
+  const connectionCheckRef = useRef(null);
 
-  // Server status check
+  // Initialize welcome message when chat opens and server is online
   useEffect(() => {
-    const checkServerStatus = async () => {
-      try {
-        const response = await fetch(getApiUrl('status'));
-        if (response.ok) {
-          const data = await response.json();
-          setServerStatus(data.status);
-          
-          // Log connection type in development
-          if (!import.meta.env.PROD) {
-            console.log('Connected via:', data.secure ? 'HTTPS' : 'HTTP');
-          }
-        } else {
+    if (isOpen && serverStatus === 'online' && messages.length === 0) {
+      setMessages([WELCOME_MESSAGE]);
+    }
+  }, [isOpen, serverStatus]);
+
+  // Server status check with retry logic
+  useEffect(() => {
+    let isSubscribed = true;
+
+    const checkStatus = async () => {
+      if (retryCount >= MAX_RETRIES) {
+        if (isSubscribed) {
           setServerStatus('offline');
+          setRetryCount(0);
         }
-      } catch (error) {
-        console.error('Server status check failed:', error);
+        return;
+      }
+
+      const result = await checkServerConnection();
+
+      if (!isSubscribed) return;
+
+      if (result.status === 'online') {
+        setServerStatus('online');
+        setRetryCount(0);
+      } else {
         setServerStatus('offline');
+        setRetryCount(prev => prev + 1);
       }
     };
-  
-    checkServerStatus();
-    
-    // Poll server status every 30 seconds
-    const interval = setInterval(checkServerStatus, 30000);
-    return () => clearInterval(interval);
-  }, []);
 
+    checkStatus();
+
+    // Set up polling interval
+    connectionCheckRef.current = setInterval(checkStatus, RETRY_INTERVAL);
+
+    // Cleanup function
+    return () => {
+      isSubscribed = false;
+      if (connectionCheckRef.current) {
+        clearInterval(connectionCheckRef.current);
+      }
+    };
+  }, [retryCount]);
+
+  // Scroll to bottom effect
   useEffect(() => {
-    scrollToBottom();
+    const scrollTimer = setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 100); // Slight delay to ensure content is rendered
+
+    return () => clearTimeout(scrollTimer);
   }, [messages]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  // Handle chat window transition
+  useEffect(() => {
+    if (isOpen) {
+      setIsTransitioning(true);
+      const timer = setTimeout(() => setIsTransitioning(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
 
   const handleSend = async () => {
-    if (!input.trim()) return;
-  
-    const userMessage = { role: 'user', content: input };
+    if (!input.trim() || !isBusinessHours() || serverStatus !== 'online') return;
+
+    const userMessage = { role: 'user', content: input.trim() };
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
-  
-    try {
-      const response = await fetch(getApiUrl('chat'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: input }),
-      });
-  
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-  
-      const data = await response.json();
-      const assistantMessage = data.response || data.message || 'No response received';
-      
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: assistantMessage
+
+    const result = await sendChatMessage(input.trim());
+
+    if (result.success) {
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: result.response
       }]);
-    } catch (error) {
-      console.error('Chat error:', error);
-      const errorMessage = error.message.includes('Failed to fetch')
-        ? 'Unable to connect to the server. Please check your internet connection and try again.'
-        : 'Sorry, I encountered an error. Please try again later.';
-      
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: errorMessage
+    } else {
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: result.error
       }]);
-    } finally {
-      setIsLoading(false);
     }
+
+    setIsLoading(false);
   };
 
   const handleKeyPress = (e) => {
@@ -100,140 +126,133 @@ const FloatingChatBot = ({ theme = 'dark' }) => {
   };
 
   return (
-    <div className="fixed bottom-20 right-4 z-50">
-      {/* Floating Button */}
-      {!isOpen && (
-        <Button
-          onClick={() => setIsOpen(true)}
-          className={`rounded-full p-4 shadow-lg hover:shadow-xl transition-all duration-300 ${
-            theme === 'dark' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'
-          }`}
-        >
-          <MessageCircle className="h-6 w-6 text-white" />
-        </Button>
-      )}
+    <ErrorBoundary>
+      <div className="fixed bottom-20 right-4 z-50">
+        {/* Floating Button */}
+        {!isOpen && (
+          <Button
+            onClick={() => setIsOpen(true)}
+            className={`rounded-full p-4 shadow-lg hover:shadow-xl transition-all duration-300 ${
+              theme === 'dark' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'
+            }`}
+          >
+            <MessageCircle className="h-6 w-6 text-white" />
+          </Button>
+        )}
 
-      {/* Chat Window */}
-      {isOpen && (
-        <div className={`w-96 h-[500px] rounded-lg shadow-xl flex flex-col ${
-          theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'
-        }`}>
-          {/* Header */}
-          <div className={`p-4 flex justify-between items-center border-b ${
-            theme === 'dark' ? 'border-gray-700' : 'border-gray-200'
-          }`}>
-            <div className="flex items-center gap-2">
-              <h3 className="font-semibold">Chat Assistant</h3>
-              {serverStatus === 'checking' && (
-                <span className="text-yellow-500 text-sm">(Connecting...)</span>
-              )}
-              {serverStatus === 'offline' && (
-                <span className="text-red-500 text-sm">(Offline)</span>
-              )}
-              {serverStatus === 'online' && !isBusinessHours() && (
-                <span className="text-orange-500 text-sm">(Outside Hours)</span>
-              )}
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsOpen(false)}
-              className={theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}
-            >
-              <X className="h-5 w-5" />
-            </Button>
-          </div>
-
-          {/* Messages */}
-          <ScrollArea className="flex-1 p-4">
-            {messages.length === 0 && (
-              <div className="text-center p-4">
-                {!isBusinessHours() ? (
-                  <div className="space-y-2">
-                    <Clock className={`h-12 w-12 mx-auto mb-2 opacity-50 ${theme === 'dark' ? 'text-white' : 'text-gray-600'}`} />
-                    <p className="font-medium">
-                      Business Hours: {formatBusinessHours().start} - {formatBusinessHours().end}
-                    </p>
-                    <p className="text-sm">Monday through Friday</p>
-                    <p className="text-sm mt-4">
-                      The assistant will be available {getNextAvailableTime()}.
-                      Feel free to explore my portfolio in the meantime!
-                    </p>
-                  </div>
-                ) : (
-                  <p>Send a message to start the conversation!</p>
-                )}
+        {/* Chat Window */}
+        {isOpen && (
+          <div
+            className={`w-96 h-[500px] rounded-lg shadow-xl flex flex-col ${
+              theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'
+            } ${isTransitioning ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}
+            transition-all duration-300 ease-in-out`}
+          >
+            {/* Header */}
+            <div className={`p-4 flex justify-between items-center border-b ${
+              theme === 'dark' ? 'border-gray-700' : 'border-gray-200'
+            }`}>
+              <div className="flex items-center gap-2">
+                <h3 className="font-semibold">Chat Assistant</h3>
+                <ChatStatus
+                  serverStatus={serverStatus}
+                  theme={theme}
+                  displayMode="compact"
+                />
               </div>
-            )}
-            {messages.map((msg, index) => (
-              <div
-                key={index}
-                className={`mb-4 ${
-                  msg.role === 'user' ? 'ml-auto text-right' : 'mr-auto'
-                }`}
-              >
-                <div
-                  className={`inline-block rounded-lg px-4 py-2 max-w-[80%] ${
-                    msg.role === 'user'
-                      ? theme === 'dark'
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-blue-500 text-white'
-                      : theme === 'dark'
-                      ? 'bg-gray-700 text-white'
-                      : 'bg-gray-100 text-gray-900'
-                  }`}
-                >
-                  {msg.content}
-                </div>
-              </div>
-            ))}
-            {isLoading && (
-              <div className="flex justify-start mb-4">
-                <div className={`inline-block rounded-lg px-4 py-2 ${
-                  theme === 'dark' ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-900'
-                }`}>
-                  Thinking...
-                </div>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
-          </ScrollArea>
-
-          {/* Input */}
-          <div className={`p-4 border-t ${
-            theme === 'dark' ? 'border-gray-700' : 'border-gray-200'
-          }`}>
-            <div className="flex gap-2">
-            <Input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder={
-                  serverStatus === 'offline'
-                    ? 'Chat is currently offline'
-                    : !isBusinessHours()
-                    ? 'Chat available during business hours'
-                    : 'Type a message...'
-                }
-                disabled={serverStatus === 'offline' || !isBusinessHours()}
-                className={theme === 'dark' ? 'bg-gray-700 border-gray-600' : 'bg-white'}
-              />
               <Button
-                onClick={handleSend}
-                disabled={isLoading || !input.trim() || serverStatus === 'offline'}
-                className={theme === 'dark' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'}
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsOpen(false)}
+                className={theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}
               >
-                {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Send className="h-4 w-4" />
-                )}
+                <X className="h-5 w-5" />
               </Button>
             </div>
+
+            {/* Messages */}
+            <ScrollArea className="flex-1 p-4">
+              {messages.length === 0 ? (
+                <ChatStatus
+                  serverStatus={serverStatus}
+                  theme={theme}
+                  displayMode="full"
+                />
+              ) : (
+                messages.map((msg, index) => (
+                  <div
+                    key={index}
+                    className={`mb-4 ${
+                      msg.role === 'user' ? 'ml-auto text-right' : 'mr-auto'
+                    }`}
+                  >
+                    <div
+                      className={`inline-block rounded-lg px-4 py-2 max-w-[80%] ${
+                        msg.role === 'user'
+                          ? theme === 'dark'
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-blue-500 text-white'
+                          : theme === 'dark'
+                          ? 'bg-gray-700 text-white'
+                          : 'bg-gray-100 text-gray-900'
+                      }`}
+                    >
+                      {msg.content}
+                    </div>
+                  </div>
+                ))
+              )}
+              {isLoading && (
+                <div className="flex justify-start mb-4">
+                  <div className={`inline-block rounded-lg px-4 py-2 ${
+                    theme === 'dark' ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-900'
+                  }`}>
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Thinking...</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div ref={messagesEndRef} />
+            </ScrollArea>
+
+            {/* Input */}
+            <div className={`p-4 border-t ${
+              theme === 'dark' ? 'border-gray-700' : 'border-gray-200'
+            }`}>
+              <div className="flex gap-2">
+                <Input
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder={
+                    serverStatus === 'offline'
+                      ? 'Chat is currently offline'
+                      : !isBusinessHours()
+                      ? 'Chat available during business hours'
+                      : 'Type a message...'
+                  }
+                  disabled={serverStatus !== 'online' || !isBusinessHours()}
+                  className={theme === 'dark' ? 'bg-gray-700 border-gray-600' : 'bg-white'}
+                />
+                <Button
+                  onClick={handleSend}
+                  disabled={isLoading || !input.trim() || serverStatus !== 'online' || !isBusinessHours()}
+                  className={theme === 'dark' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'}
+                >
+                  {isLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </ErrorBoundary>
   );
 };
 
