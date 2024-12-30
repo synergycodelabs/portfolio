@@ -6,6 +6,8 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import helmet from 'helmet';
+import https from 'https';
+import http from 'http';
 
 // Initialize environment and dirname
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -14,6 +16,13 @@ dotenv.config();
 // Initialize Express app
 const app = express();
 const port = process.env.PORT || 3002;
+const httpsPort = process.env.HTTPS_PORT || 3003;
+
+// SSL configuration
+const sslOptions = {
+  key: fs.readFileSync(path.join(__dirname, 'ssl', 'private.key')),
+  cert: fs.readFileSync(path.join(__dirname, 'ssl', 'certificate.crt'))
+};
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -26,7 +35,6 @@ let embeddings = null;
 // Function to load embeddings
 function loadEmbeddings() {
   try {
-    // Use local path relative to server directory
     const dataPath = path.join(__dirname, 'data', 'embeddings.json');
     console.log('Looking for embeddings at:', dataPath);
 
@@ -69,11 +77,23 @@ app.use(helmet({
 app.use(cors({
   origin: process.env.ALLOWED_ORIGINS.split(','),
   methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
 }));
 
 // Body parser middleware
 app.use(express.json());
+
+// Redirect HTTP to HTTPS in production
+if (process.env.NODE_ENV === 'production') {
+  app.use((req, res, next) => {
+    if (req.secure) {
+      next();
+    } else {
+      res.redirect(`https://${req.headers.host}${req.url}`);
+    }
+  });
+}
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -192,8 +212,24 @@ Guidelines:
   }
 });
 
-// Start HTTP server
-app.listen(port, () => {
+// Start both HTTP and HTTPS servers
+const httpServer = http.createServer(app);
+const httpsServer = https.createServer(sslOptions, app);
+
+httpServer.listen(port, '0.0.0.0', () => {
   console.log(`HTTP Server running on port ${port}`);
-  console.log(`Check HTTP status at http://localhost:${port}/api/status`);
+});
+
+httpsServer.listen(httpsPort, '0.0.0.0', () => {
+  console.log(`HTTPS Server running on port ${httpsPort}`);
+});
+
+// Handle graceful shutdown
+process.on('SIGTERM', () => {
+  httpServer.close(() => {
+    console.log('HTTP Server closed');
+  });
+  httpsServer.close(() => {
+    console.log('HTTPS Server closed');
+  });
 });
