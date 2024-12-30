@@ -28,5 +28,15 @@ dist-ssr
 .env.local
 .env.development.local
 .env.test.local
-.env.production.localcertbot/
+.env.production.local
+
+# SSL and certificates
+server/ssl/
 certbot/
+
+# Build output
+nginx/html/
+
+# Backup files
+*.bak*
+*.bak
