@@ -4,6 +4,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { getApiUrl } from '@/config/api';
+import { isBusinessHours, getNextAvailableTime, formatBusinessHours } from '@/utils/businessHours';
 
 const FloatingChatBot = ({ theme = 'dark' }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -129,6 +130,9 @@ const FloatingChatBot = ({ theme = 'dark' }) => {
               {serverStatus === 'offline' && (
                 <span className="text-red-500 text-sm">(Offline)</span>
               )}
+              {serverStatus === 'online' && !isBusinessHours() && (
+                <span className="text-orange-500 text-sm">(Outside Hours)</span>
+              )}
             </div>
             <Button
               variant="ghost"
@@ -142,6 +146,25 @@ const FloatingChatBot = ({ theme = 'dark' }) => {
 
           {/* Messages */}
           <ScrollArea className="flex-1 p-4">
+            {messages.length === 0 && (
+              <div className="text-center p-4">
+                {!isBusinessHours() ? (
+                  <div className="space-y-2">
+                    <Clock className={`h-12 w-12 mx-auto mb-2 opacity-50 ${theme === 'dark' ? 'text-white' : 'text-gray-600'}`} />
+                    <p className="font-medium">
+                      Business Hours: {formatBusinessHours().start} - {formatBusinessHours().end}
+                    </p>
+                    <p className="text-sm">Monday through Friday</p>
+                    <p className="text-sm mt-4">
+                      The assistant will be available {getNextAvailableTime()}.
+                      Feel free to explore my portfolio in the meantime!
+                    </p>
+                  </div>
+                ) : (
+                  <p>Send a message to start the conversation!</p>
+                )}
+              </div>
+            )}
             {messages.map((msg, index) => (
               <div
                 key={index}
@@ -181,14 +204,18 @@ const FloatingChatBot = ({ theme = 'dark' }) => {
             theme === 'dark' ? 'border-gray-700' : 'border-gray-200'
           }`}>
             <div className="flex gap-2">
-              <Input
+            <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder={serverStatus === 'offline' 
-                  ? 'Chat is currently offline' 
-                  : 'Type a message...'}
-                disabled={serverStatus === 'offline'}
+                placeholder={
+                  serverStatus === 'offline'
+                    ? 'Chat is currently offline'
+                    : !isBusinessHours()
+                    ? 'Chat available during business hours'
+                    : 'Type a message...'
+                }
+                disabled={serverStatus === 'offline' || !isBusinessHours()}
                 className={theme === 'dark' ? 'bg-gray-700 border-gray-600' : 'bg-white'}
               />
               <Button

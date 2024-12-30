@@ -1,14 +1,32 @@
 services:
-  portfolio-server:
-    build: .
-    container_name: portfolio-server
-    network_mode: "bridge"
+  nginx:
+    image: nginx:alpine
+    container_name: portfolio-nginx
     ports:
-      - "3002:3002"
-      - "3003:3003"
-    environment:
-      - NODE_ENV=production
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - "80:80"
+      - "443:443"
     volumes:
-      - ./data:/usr/src/app/data
-    restart: unless-stopped
+      - ./nginx/conf:/etc/nginx/conf.d:ro
+      - ./certbot/conf:/etc/letsencrypt:ro
+      - ./certbot/www:/var/www/certbot:ro
+      - ./dist:/usr/share/nginx/html:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - portfolio-network
+    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
+
+  certbot:
+    image: certbot/certbot
+    container_name: portfolio-certbot
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    depends_on:
+      - nginx
+    networks:
+      - portfolio-network
+
+networks:
+  portfolio-network:
+    driver: bridge

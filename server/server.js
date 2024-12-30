@@ -5,27 +5,20 @@ import { OpenAI } from 'openai';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import https from 'https';
 import helmet from 'helmet';
 
+// Initialize environment and dirname
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config();
 
+// Initialize Express app
 const app = express();
 const port = process.env.PORT || 3002;
-const httpsPort = process.env.HTTPS_PORT || 3003;
 
 // Initialize OpenAI client
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-
-// SSL configuration
-// Remove or comment out these lines at the top
-// const sslOptions = {
-//   key: fs.readFileSync(path.join(__dirname, 'ssl', 'private.key')),
-//   cert: fs.readFileSync(path.join(__dirname, 'ssl', 'certificate.crt'))
-// };
 
 // Initialize embeddings as null
 let embeddings = null;
@@ -33,114 +26,84 @@ let embeddings = null;
 // Function to load embeddings
 function loadEmbeddings() {
   try {
+    // Use local path relative to server directory
     const dataPath = path.join(__dirname, 'data', 'embeddings.json');
     console.log('Looking for embeddings at:', dataPath);
 
     if (fs.existsSync(dataPath)) {
       console.log('Found embeddings file');
-      embeddings = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+      const rawData = fs.readFileSync(dataPath, 'utf8');
+      console.log('File read successfully, parsing JSON...');
+      embeddings = JSON.parse(rawData);
       console.log(`Loaded ${embeddings.length} embeddings successfully`);
     } else {
-      console.log('No embeddings file found at:', dataPath);
-      console.log('Please run generate-embeddings.js first');
+      console.error('No embeddings file found at:', dataPath);
+      console.error('Current directory:', __dirname);
+      try {
+        console.error('Directory contents:', fs.readdirSync(path.join(__dirname, 'data')));
+      } catch (err) {
+        console.error('Could not read data directory:', err.message);
+      }
     }
   } catch (error) {
     console.error('Error loading embeddings:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      code: error.code
+    });
   }
 }
 
 // Load embeddings on startup
 loadEmbeddings();
 
-// Security middleware
+// Security middleware with development-friendly settings
 app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      imgSrc: ["'self'", "blob:", "data:"],
-      connectSrc: ["'self'"],
-      scriptSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-    },
-  },
+  contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false,
   crossOriginResourcePolicy: { policy: "cross-origin" },
 }));
 
-// CORS configuration
-const allowedOrigins = [
-  'http://localhost:3001',
-  'https://synergycodelabs.github.io',
-  'http://72.79.21.7:8443',
-  'https://72.79.21.7:8444'
-];
-
+// CORS configuration with specific origins
 app.use(cors({
-  origin: function(origin, callback) {
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  methods: ['GET', 'POST'],
-  credentials: true,
-  optionsSuccessStatus: 200
+  origin: process.env.ALLOWED_ORIGINS.split(','),
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Add security headers middleware
-app.use((req, res, next) => {
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('X-XSS-Protection', '1; mode=block');
-  next();
-});
-
+// Body parser middleware
 app.use(express.json());
 
-// Redirect HTTP to HTTPS in production
-if (process.env.NODE_ENV === 'production') {
-  app.use((req, res, next) => {
-    if (!req.secure) {
-      return res.redirect(['https://', req.get('Host'), req.url].join(''));
-    }
-    next();
+// Root endpoint
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Portfolio API Server',
+    version: '1.0.0',
+    endpoints: [
+      '/api/status - Get server status',
+      '/api/chat - Chat with the portfolio bot'
+    ]
   });
-}
+});
 
-// Rate limiting - basic implementation
-const rateLimit = {};
-const WINDOW_SIZE_IN_HOURS = 24;
-const MAX_REQUESTS_PER_WINDOW = 100;
-
-app.use((req, res, next) => {
-  const ip = req.ip;
-  const now = Date.now();
-  
-  if (!rateLimit[ip]) {
-    rateLimit[ip] = {
-      count: 0,
-      firstRequest: now
+// Basic status endpoint with error handling
+app.get('/api/status', (req, res) => {
+  try {
+    const statusResponse = {
+      status: 'online',
+      embeddings: embeddings ? 'loaded' : 'not loaded',
+      embeddingsCount: embeddings ? embeddings.length : 0,
+      currentPath: __dirname,
+      dataPath: path.join(__dirname, 'data', 'embeddings.json'),
+      timestamp: new Date().toISOString()
     };
+    console.log('Status response:', statusResponse);
+    res.json(statusResponse);
+  } catch (error) {
+    console.error('Error in status endpoint:', error);
+    res.status(500).json({ error: 'Internal server error', message: error.message });
   }
-
-  // Reset counter if window has passed
-  if (now - rateLimit[ip].firstRequest > WINDOW_SIZE_IN_HOURS * 60 * 60 * 1000) {
-    rateLimit[ip] = {
-      count: 0,
-      firstRequest: now
-    };
-  }
-
-  rateLimit[ip].count++;
-
-  if (rateLimit[ip].count > MAX_REQUESTS_PER_WINDOW) {
-    return res.status(429).json({
-      error: 'Too many requests. Please try again later.'
-    });
-  }
-
-  next();
 });
 
 // Function to calculate cosine similarity
@@ -180,34 +143,16 @@ function getRelevantContext(questionEmbedding) {
   };
 }
 
-// Endpoint to check server status and embeddings
-app.get('/api/status', (req, res) => {
-  res.json({
-    status: 'online',
-    embeddings: embeddings ? 'loaded' : 'not loaded',
-    embeddingsCount: embeddings ? embeddings.length : 0,
-    secure: req.secure
-  });
-});
-
 // Chat endpoint
 app.post('/api/chat', async (req, res) => {
   try {
     const { message } = req.body;
 
     if (!embeddings) {
-      const response = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: 'I am temporarily unavailable. Please try again later when the content has been loaded.',
-          },
-          { role: 'user', content: message },
-        ],
+      return res.status(503).json({
+        error: 'Service temporarily unavailable',
+        message: 'Embeddings not loaded. Please try again later.'
       });
-
-      return res.json({ response: response.choices[0].message.content });
     }
 
     const embeddingResponse = await openai.embeddings.create({
@@ -218,7 +163,7 @@ app.post('/api/chat', async (req, res) => {
     const { context, sources } = getRelevantContext(embeddingResponse.data[0].embedding);
 
     const chatResponse = await openai.chat.completions.create({
-      model: 'ft:gpt-4o-mini-2024-07-18:aplusg:portfolio-bot-v1:AjLmxhRS',
+      model: 'gpt-4',
       messages: [
         {
           role: 'system',
@@ -229,7 +174,7 @@ ${context}
 
 Guidelines:
 - Base your responses only on the above context from Angel's portfolio
-- When appropriate, mention which section (${sources.join(', ')}) contains the information you're referencing
+- When appropriate, mention which section contains the information you're referencing
 - Keep responses concise and factual
 - If you can't find relevant information in the context, say "I don't have that specific information in the portfolio content"
 - Don't make assumptions beyond what's explicitly stated in the context
@@ -247,16 +192,8 @@ Guidelines:
   }
 });
 
-// Create HTTPS server
-// const httpsServer = https.createServer(sslOptions, app);
-
-// Start both HTTP and HTTPS servers
+// Start HTTP server
 app.listen(port, () => {
   console.log(`HTTP Server running on port ${port}`);
   console.log(`Check HTTP status at http://localhost:${port}/api/status`);
 });
-
-// httpsServer.listen(httpsPort, () => {
-//   console.log(`HTTPS Server running on port ${httpsPort}`);
-//   console.log(`Check HTTPS status at https://localhost:${httpsPort}/api/status`);
-// });

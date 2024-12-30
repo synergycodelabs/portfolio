@@ -1,7 +1,7 @@
 const apiConfig = {
   baseUrl: import.meta.env.PROD
-    ? 'https://api.synergycodelabs.com:8444'
-    : 'http://localhost:3002',
+    ? 'https://api.synergycodelabs.com:8444/api'
+    : 'http://localhost:3004/api',
   endpoints: {
     status: '/api/status',
     chat: '/api/chat'

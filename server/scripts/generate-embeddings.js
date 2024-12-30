@@ -2,6 +2,10 @@ import { OpenAI } from 'openai';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -17,25 +21,37 @@ const openai = new OpenAI({
 });
 
 // Function to extract text content from components
-async function extractContent() {
+async function extractContent(includeExperienceData = false) {
   const content = [];
   const componentsDir = path.join(__dirname, '../../src/components/sections');
-  
+
   try {
+    // Include experience data if specified
+    if (includeExperienceData) {
+      const experienceDataPath = path.join(componentsDir, 'experience/experienceData.js');
+      if (fs.existsSync(experienceDataPath)) {
+        const experienceData = await fs.promises.readFile(experienceDataPath, 'utf8');
+        content.push({
+          source: 'experience',
+          text: experienceData
+        });
+      }
+    }
+
     const files = await fs.promises.readdir(componentsDir);
-    
+
     for (const file of files) {
       if (file.endsWith('.jsx') && !file.includes('.bak')) {
         const filePath = path.join(componentsDir, file);
         const fileContent = await fs.promises.readFile(filePath, 'utf8');
-        
-        // Extract text content (you might want to enhance this regex based on your components)
+
+        // Extract text content
         const textContent = fileContent
           .replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '') // Remove comments
           .replace(/<[^>]+>/g, ' ') // Remove JSX tags
           .replace(/\s+/g, ' ') // Normalize whitespace
           .trim();
-        
+
         if (textContent) {
           content.push({
             source: file,
@@ -47,7 +63,7 @@ async function extractContent() {
   } catch (error) {
     console.error('Error reading components:', error);
   }
-  
+
   return content;
 }
 
@@ -55,9 +71,9 @@ async function extractContent() {
 function chunkText(text, maxLength = 1000) {
   const chunks = [];
   let currentChunk = '';
-  
+
   const sentences = text.split('. ');
-  
+
   for (const sentence of sentences) {
     if (currentChunk.length + sentence.length > maxLength) {
       chunks.push(currentChunk.trim());
@@ -66,54 +82,58 @@ function chunkText(text, maxLength = 1000) {
       currentChunk += sentence + '. ';
     }
   }
-  
+
   if (currentChunk) {
     chunks.push(currentChunk.trim());
   }
-  
+
   return chunks;
 }
 
 // Main function to generate and store embeddings
-async function generateEmbeddings() {
+async function generateEmbeddings(includeExperienceData = false) {
   try {
     console.log('Extracting content...');
-    const content = await extractContent();
-    
+    const content = await extractContent(includeExperienceData);
+
     console.log('Generating embeddings...');
     const embeddings = [];
-    
+
     for (const item of content) {
       const chunks = chunkText(item.text);
-      
+
       for (const chunk of chunks) {
         const embeddingResponse = await openai.embeddings.create({
           model: "text-embedding-3-small",
           input: chunk,
         });
-        
+
         embeddings.push({
           source: item.source,
           text: chunk,
           embedding: embeddingResponse.data[0].embedding,
         });
 
-        // Log progress
         console.log(`Generated embedding for chunk from ${item.source}`);
       }
     }
-    
+
     console.log('Storing embeddings...');
+    const outputPath = path.join(dataDir, 'embeddings.json');
     await fs.promises.writeFile(
-      path.join(dataDir, 'embeddings.json'),
+      outputPath,
       JSON.stringify(embeddings, null, 2)
     );
-    
-    console.log('Done! Embeddings saved to data/embeddings.json');
+    console.log(`Embeddings saved to ${outputPath}`);
+
   } catch (error) {
     console.error('Error generating embeddings:', error);
   }
 }
 
+// Parse command line arguments
+const args = process.argv.slice(2);
+const includeExperienceData = args.includes('--include-experience');
+
 // Run the script
-generateEmbeddings();
+generateEmbeddings(includeExperienceData);

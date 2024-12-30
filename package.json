@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist",
-    "generate-embeddings": "node scripts/generate-embeddings.js"
+    "generate-embeddings": "node server/scripts/generate-embeddings.js",
+    "generate-embeddings:full": "node server/scripts/generate-embeddings.js --include-experience"
   },
   "dependencies": {
     "@formspree/react": "^2.5.1",
