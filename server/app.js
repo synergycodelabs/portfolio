@@ -3,7 +3,6 @@ import helmet from 'helmet';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
-
 import environment from './config/environment.js';
 import statusRoutes from './routes/statusRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
@@ -36,17 +35,6 @@ app.use(cors({
 
 // Body parser
 app.use(express.json());
-
-// Redirect HTTP to HTTPS in production
-if (environment.NODE_ENV === 'production') {
-    app.use((req, res, next) => {
-        if (req.secure) {
-            next();
-        } else {
-            res.redirect(`https://${req.headers.host}${req.url}`);
-        }
-    });
-}
 
 // Root endpoint
 app.get('/', (req, res) => {
