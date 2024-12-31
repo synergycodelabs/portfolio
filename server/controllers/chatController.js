@@ -22,7 +22,7 @@ export async function postChat(req, res) {
     const { context, sources } = getRelevantContext(embeddingResponse.data[0].embedding);
 
     const chatResponse = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: 'gpt-4o-mini',
       messages: [
         {
           role: 'system',
