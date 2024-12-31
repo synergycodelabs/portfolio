@@ -1,32 +1,30 @@
 services:
   nginx:
-    image: nginx:alpine
     container_name: portfolio-nginx
+    image: nginx:1.25-alpine
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx/conf:/etc/nginx/conf.d:ro
-      - ./certbot/conf:/etc/letsencrypt:ro
-      - ./certbot/www:/var/www/certbot:ro
-      - ./dist:/usr/share/nginx/html:ro
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    networks:
-      - portfolio-network
-    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
+      - ./nginx/conf/default.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/html:/usr/share/nginx/html
+      - ./nginx/certbot/www:/var/www/certbot
+      - ./nginx/logs:/var/log/nginx
+    environment:
+      - NGINX_ENTRYPOINT_QUIET_LOGS=
+    command: sh -c "nginx -g 'daemon off; error_log /dev/stderr debug;'"
+    restart: unless-stopped
 
-  certbot:
-    image: certbot/certbot
-    container_name: portfolio-certbot
+  api:
+    container_name: portfolio-api
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - "3002:3002"
     volumes:
-      - ./certbot/conf:/etc/letsencrypt
-      - ./certbot/www:/var/www/certbot
-    depends_on:
-      - nginx
-    networks:
-      - portfolio-network
-
-networks:
-  portfolio-network:
-    driver: bridge
+      - ./server:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped

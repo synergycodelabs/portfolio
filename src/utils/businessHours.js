@@ -1,23 +1,14 @@
 const config = {
   timezone: 'America/New_York',
   hours: {
-    start: 8,  // 8 AM
-    end: 18,   // 6 PM
+    start: 0,  // 12 AM
+    end: 24,   // 12 AM next day
   },
-  workDays: [1, 2, 3, 4, 5], // Monday through Friday
+  workDays: [0, 1, 2, 3, 4, 5, 6], // All days of the week (Sunday through Saturday)
 };
 
 export const isBusinessHours = () => {
-  const now = new Date();
-  const options = { timeZone: config.timezone };
-  const localTime = new Date(now.toLocaleString('en-US', options));
-  
-  const hour = localTime.getHours();
-  const day = localTime.getDay();
-  
-  return config.workDays.includes(day) && 
-         hour >= config.hours.start && 
-         hour < config.hours.end;
+  return true;  // Always available 24/7
 };
 
 export const getNextAvailableTime = () => {
