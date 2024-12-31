@@ -1,3 +1,0 @@
-User-agent: *
-Allow: /
-Sitemap: https://synergycodelabs.github.io/portfolio-showcase/sitemap.xml
