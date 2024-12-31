@@ -1,7 +1,7 @@
 export const getApiUrl = (endpoint) => {
   const baseUrl = import.meta.env.PROD
     ? 'https://api.synergycodelabs.com'
-    : 'http://localhost:3003';
+    : 'http://localhost:3002';
   const endpoints = {
     status: '/api/status',
     chat: '/api/chat'
@@ -12,7 +12,7 @@ export const getApiUrl = (endpoint) => {
 export default {
   baseUrl: import.meta.env.PROD
     ? 'https://api.synergycodelabs.com'
-    : 'http://localhost:3003',
+    : 'http://localhost:3002',
   endpoints: {
     status: '/api/status',
     chat: '/api/chat'
