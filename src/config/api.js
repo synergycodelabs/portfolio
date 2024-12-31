@@ -3,8 +3,8 @@ export const getApiUrl = (endpoint) => {
     ? 'https://api.synergycodelabs.com'
     : 'http://localhost:3003';
   const endpoints = {
-    status: '/status',
-    chat: '/chat'
+    status: '/api/status',
+    chat: '/api/chat'
   };
   return `${baseUrl}${endpoints[endpoint]}`;
 };
@@ -14,7 +14,7 @@ export default {
     ? 'https://api.synergycodelabs.com'
     : 'http://localhost:3003',
   endpoints: {
-    status: '/status',
-    chat: '/chat'
+    status: '/api/status',
+    chat: '/api/chat'
   }
 };
