@@ -7,6 +7,22 @@ if "%1"=="dev" (
     goto :eof
 )
 
+if "%1"=="server-dev" (
+    echo Starting server in development mode...
+    cd server
+    npm run start:dev
+    cd ..
+    goto :eof
+)
+
+if "%1"=="server-prod" (
+    echo Starting server in production mode...
+    cd server
+    npm run start:prod
+    cd ..
+    goto :eof
+)
+
 if "%1"=="docker-up" (
     echo Starting Docker containers...
     docker-compose up -d
@@ -62,6 +78,8 @@ if "%1"=="deploy" (
 
 echo Usage:
 echo   %~nx0 dev            - Start development server
+echo   %~nx0 server-dev     - Start server in development mode
+echo   %~nx0 server-prod    - Start server in production mode
 echo   %~nx0 docker-up      - Start Docker containers
 echo   %~nx0 docker-down    - Stop Docker containers
 echo   %~nx0 docker-rebuild - Rebuild and restart containers
