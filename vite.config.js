@@ -16,7 +16,7 @@ export default defineConfig({
     open: true,
     proxy: {
       '/api': {
-        target: 'https://api.synergycodelabs.com', // Docker nginx port
+        target: process.env.NODE_ENV === 'development' ? 'http://localhost:3003' : 'https://api.synergycodelabs.com',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/api/, ''),

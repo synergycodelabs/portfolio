@@ -10,6 +10,10 @@ if "%1"=="dev" (
 if "%1"=="server-dev" (
     echo Starting server in development mode...
     cd server
+    for /f "tokens=* usebackq" %%a in (`docker ps --filter "name=portfolio-api" --format "{{.Names}}"`) do (
+        echo Found running Docker container, stopping it...
+        docker stop portfolio-api
+    )
     npm run start:dev
     cd ..
     goto :eof

@@ -40,3 +40,4 @@ nginx/html/
 # Backup files
 *.bak*
 *.bak
+server/.env.development
