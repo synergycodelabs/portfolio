@@ -39,5 +39,5 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3002
-    command: node dev-server.js
+    command: node server.js
     restart: unless-stopped
