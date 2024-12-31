@@ -22,6 +22,8 @@
     "@vercel/node": "^4.0.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "express-rate-limit": "^7.5.0",
+    "express-validator": "^7.2.1",
     "lucide-react": "^0.263.1",
     "node-fetch": "^3.3.0",
     "openai": "^4.0.0",
@@ -33,7 +35,8 @@
     "react-router-dom": "^7.1.1",
     "tailwind-merge": "^1.14.0",
     "tailwindcss-animate": "^1.0.7",
-    "tiktoken": "^1.0.0"
+    "tiktoken": "^1.0.0",
+    "winston": "^3.17.0"
   },
   "devDependencies": {
     "@types/node": "^20.6.0",
