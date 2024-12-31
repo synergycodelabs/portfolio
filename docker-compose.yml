@@ -9,7 +9,7 @@ services:
       - ./nginx/conf/default.conf:/etc/nginx/conf.d/default.conf
       - ./nginx/html:/usr/share/nginx/html
       - ./nginx/certbot/www:/var/www/certbot
-      - ./nginx/certbot/conf:/etc/nginx/ssl
+      - ./nginx/certbot/conf:/etc/letsencrypt
       - ./nginx/logs:/var/log/nginx
     environment:
       - NGINX_ENTRYPOINT_QUIET_LOGS=
