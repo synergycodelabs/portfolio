@@ -2,12 +2,10 @@ export const getApiUrl = (endpoint) => {
   const baseUrl = import.meta.env.PROD
     ? 'https://api.synergycodelabs.com'
     : 'http://localhost:3003';
-
   const endpoints = {
-    status: '/api/status',
-    chat: '/api/chat'
+    status: '/status',
+    chat: '/chat'
   };
-
   return `${baseUrl}${endpoints[endpoint]}`;
 };
 
@@ -16,7 +14,7 @@ export default {
     ? 'https://api.synergycodelabs.com'
     : 'http://localhost:3003',
   endpoints: {
-    status: '/api/status',
-    chat: '/api/chat'
+    status: '/status',
+    chat: '/chat'
   }
 };
