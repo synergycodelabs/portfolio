@@ -9,11 +9,23 @@ services:
       - ./nginx/conf/default.conf:/etc/nginx/conf.d/default.conf
       - ./nginx/html:/usr/share/nginx/html
       - ./nginx/certbot/www:/var/www/certbot
+      - ./nginx/certbot/conf:/etc/nginx/ssl
       - ./nginx/logs:/var/log/nginx
     environment:
       - NGINX_ENTRYPOINT_QUIET_LOGS=
     command: sh -c "nginx -g 'daemon off; error_log /dev/stderr debug;'"
     restart: unless-stopped
+    depends_on:
+      - api
+
+  certbot:
+    container_name: portfolio-certbot
+    image: certbot/certbot:latest
+    volumes:
+      - ./nginx/certbot/www:/var/www/certbot
+      - ./nginx/certbot/conf:/etc/letsencrypt
+    depends_on:
+      - nginx
 
   api:
     container_name: portfolio-api
