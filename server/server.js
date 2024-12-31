@@ -1,235 +1,52 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import { OpenAI } from 'openai';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import helmet from 'helmet';
-import https from 'https';
 import http from 'http';
+import https from 'https';
+import app from './app.js';
+import environment from './config/environment.js';
+import sslConfig from './config/sslConfig.js';
+import logger from './utils/logger.js';
 
-// Initialize environment and dirname
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-dotenv.config();
-
-// Initialize Express app
-const app = express();
-const port = process.env.PORT || 3002;
-const httpsPort = process.env.HTTPS_PORT || 3003;
-
-// SSL configuration
-const sslOptions = {
-  key: fs.readFileSync(path.join(__dirname, 'ssl', 'private.key')),
-  cert: fs.readFileSync(path.join(__dirname, 'ssl', 'certificate.crt'))
-};
-
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-// Initialize embeddings as null
-let embeddings = null;
-
-// Function to load embeddings
-function loadEmbeddings() {
-  try {
-    const dataPath = path.join(__dirname, 'data', 'embeddings.json');
-    console.log('Looking for embeddings at:', dataPath);
-
-    if (fs.existsSync(dataPath)) {
-      console.log('Found embeddings file');
-      const rawData = fs.readFileSync(dataPath, 'utf8');
-      console.log('File read successfully, parsing JSON...');
-      embeddings = JSON.parse(rawData);
-      console.log(`Loaded ${embeddings.length} embeddings successfully`);
-    } else {
-      console.error('No embeddings file found at:', dataPath);
-      console.error('Current directory:', __dirname);
-      try {
-        console.error('Directory contents:', fs.readdirSync(path.join(__dirname, 'data')));
-      } catch (err) {
-        console.error('Could not read data directory:', err.message);
-      }
-    }
-  } catch (error) {
-    console.error('Error loading embeddings:', error);
-    console.error('Error details:', {
-      message: error.message,
-      stack: error.stack,
-      code: error.code
-    });
-  }
-}
-
-// Load embeddings on startup
-loadEmbeddings();
-
-// Security middleware with development-friendly settings
-app.use(helmet({
-  contentSecurityPolicy: false,
-  crossOriginEmbedderPolicy: false,
-  crossOriginResourcePolicy: { policy: "cross-origin" },
-}));
-
-// CORS configuration with specific origins
-app.use(cors({
-  origin: process.env.ALLOWED_ORIGINS.split(','),
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
-}));
-
-// Body parser middleware
-app.use(express.json());
-
-// Redirect HTTP to HTTPS in production
-if (process.env.NODE_ENV === 'production') {
-  app.use((req, res, next) => {
-    if (req.secure) {
-      next();
-    } else {
-      res.redirect(`https://${req.headers.host}${req.url}`);
-    }
-  });
-}
-
-// Root endpoint
-app.get('/', (req, res) => {
-  res.json({
-    message: 'Portfolio API Server',
-    version: '1.0.0',
-    endpoints: [
-      '/api/status - Get server status',
-      '/api/chat - Chat with the portfolio bot'
-    ]
-  });
-});
-
-// Basic status endpoint with error handling
-app.get('/api/status', (req, res) => {
-  try {
-    const statusResponse = {
-      status: 'online',
-      embeddings: embeddings ? 'loaded' : 'not loaded',
-      embeddingsCount: embeddings ? embeddings.length : 0,
-      currentPath: __dirname,
-      dataPath: path.join(__dirname, 'data', 'embeddings.json'),
-      timestamp: new Date().toISOString()
-    };
-    console.log('Status response:', statusResponse);
-    res.json(statusResponse);
-  } catch (error) {
-    console.error('Error in status endpoint:', error);
-    res.status(500).json({ error: 'Internal server error', message: error.message });
-  }
-});
-
-// Function to calculate cosine similarity
-function calculateCosineSimilarity(vecA, vecB) {
-  const dotProduct = vecA.reduce((acc, val, i) => acc + val * vecB[i], 0);
-  const normA = Math.sqrt(vecA.reduce((acc, val) => acc + val * val, 0));
-  const normB = Math.sqrt(vecB.reduce((acc, val) => acc + val * val, 0));
-  return dotProduct / (normA * normB);
-}
-
-// Function to get relevant context with sources
-function getRelevantContext(questionEmbedding) {
-  if (!embeddings) {
-    return {
-      context: '',
-      sources: []
-    };
-  }
-
-  const similarities = embeddings.map(entry => ({
-    text: entry.text,
-    source: entry.source,
-    similarity: calculateCosineSimilarity(questionEmbedding, entry.embedding)
-  }));
-
-  const topResults = similarities
-    .sort((a, b) => b.similarity - a.similarity)
-    .slice(0, 3);
-
-  const sources = [...new Set(topResults
-    .map(result => result.source.replace('.jsx', ''))
-    .filter(source => source))];
-
-  return {
-    context: topResults.map(result => result.text).join('\n\n'),
-    sources
-  };
-}
-
-// Chat endpoint
-app.post('/api/chat', async (req, res) => {
-  try {
-    const { message } = req.body;
-
-    if (!embeddings) {
-      return res.status(503).json({
-        error: 'Service temporarily unavailable',
-        message: 'Embeddings not loaded. Please try again later.'
-      });
-    }
-
-    const embeddingResponse = await openai.embeddings.create({
-      model: 'text-embedding-3-small',
-      input: message,
-    });
-
-    const { context, sources } = getRelevantContext(embeddingResponse.data[0].embedding);
-
-    const chatResponse = await openai.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: `You are an AI assistant focused on providing information about Angel's portfolio website content. Your responses should be based strictly on the provided context.
-
-Context from sections [${sources.join(', ')}]:
-${context}
-
-Guidelines:
-- Base your responses only on the above context from Angel's portfolio
-- When appropriate, mention which section contains the information you're referencing
-- Keep responses concise and factual
-- If you can't find relevant information in the context, say "I don't have that specific information in the portfolio content"
-- Don't make assumptions beyond what's explicitly stated in the context
-- Direct users to specific sections when they ask about related topics`,
-        },
-        { role: 'user', content: message },
-      ],
-      temperature: 0.5,
-    });
-
-    res.json({ response: chatResponse.choices[0].message.content });
-  } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-// Start both HTTP and HTTPS servers
+// Create HTTP server
 const httpServer = http.createServer(app);
-const httpsServer = https.createServer(sslOptions, app);
 
-httpServer.listen(port, '0.0.0.0', () => {
-  console.log(`HTTP Server running on port ${port}`);
+// Create HTTPS server if in production
+let httpsServer = null;
+if (environment.USE_SSL) {
+    httpsServer = https.createServer(sslConfig, app);
+}
+
+// Start HTTP server
+httpServer.listen(environment.PORT, environment.HOST, () => {
+    logger.info(`HTTP Server running on ${environment.HOST}:${environment.PORT}`);
+    if (environment.NODE_ENV === 'development') {
+        logger.info(`Development server accessible at http://${environment.HOST}:${environment.PORT}`);
+    }
 });
 
-httpsServer.listen(httpsPort, '0.0.0.0', () => {
-  console.log(`HTTPS Server running on port ${httpsPort}`);
-});
+// Start HTTPS server if in production
+if (httpsServer) {
+    httpsServer.listen(environment.HTTPS_PORT, environment.HOST, () => {
+        logger.info(`HTTPS Server running on port ${environment.HTTPS_PORT}`);
+    });
+}
 
 // Handle graceful shutdown
-process.on('SIGTERM', () => {
-  httpServer.close(() => {
-    console.log('HTTP Server closed');
-  });
-  httpsServer.close(() => {
-    console.log('HTTPS Server closed');
-  });
-});
+const gracefulShutdown = () => {
+    httpServer.close(() => {
+        logger.info('HTTP Server closed');
+    });
+    
+    if (httpsServer) {
+        httpsServer.close(() => {
+            logger.info('HTTPS Server closed');
+        });
+    }
+    
+    // Give processes 10 seconds to close gracefully
+    setTimeout(() => {
+        process.exit(0);
+    }, 10000);
+};
+
+// Handle termination signals
+process.on('SIGTERM', gracefulShutdown);
+process.on('SIGINT', gracefulShutdown);
