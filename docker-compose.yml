@@ -13,7 +13,6 @@ services:
       - ./nginx/logs:/var/log/nginx
     environment:
       - NGINX_ENTRYPOINT_QUIET_LOGS=
-    command: sh -c "nginx -g 'daemon off; error_log /dev/stderr debug;'"
     restart: unless-stopped
     depends_on:
       - api
@@ -39,4 +38,6 @@ services:
       - /app/node_modules
     environment:
       - NODE_ENV=production
+      - PORT=3002
+    command: node dev-server.js
     restart: unless-stopped
