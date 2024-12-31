@@ -28,6 +28,7 @@ dist-ssr
 .env.local
 .env.development.local
 .env.test.local
+<<<<<<< HEAD
 .env.production.local
 
 # SSL and certificates
@@ -40,3 +41,6 @@ nginx/html/
 # Backup files
 *.bak*
 *.bak
+=======
+.env.production.local
+>>>>>>> d542c3a4870eb3da6036318fdaf451e050f738b0
