@@ -188,25 +188,74 @@ export const checkServerConnection = async () => {
 };
 
 // Send chat message
+// In connectionHelper.js
 export const sendChatMessage = async (message) => {
   try {
+    const isMobile = /iPhone|iPad|iPod|Android|Windows Phone|IEMobile/i.test(navigator.userAgent);
+    const isEdge = /Edg/i.test(navigator.userAgent);
+    
     console.log('Sending chat message to:', getApiUrl('chat'));
     
+    // Special handling for Edge mobile
+    if (isMobile && isEdge) {
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', getApiUrl('chat'), true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.setRequestHeader('Accept', 'application/json');
+        
+        xhr.onload = function() {
+          if (xhr.status === 200) {
+            try {
+              const data = JSON.parse(xhr.responseText);
+              resolve({
+                success: true,
+                response: data.response || data.message || 'No response received',
+                error: null
+              });
+            } catch (error) {
+              resolve({
+                success: false,
+                response: null,
+                error: 'Error parsing response'
+              });
+            }
+          } else {
+            resolve({
+              success: false,
+              response: null,
+              error: `HTTP ${xhr.status}: ${xhr.statusText}`
+            });
+          }
+        };
+        
+        xhr.onerror = function() {
+          resolve({
+            success: false,
+            response: null,
+            error: 'Unable to connect to the server. Please check your internet connection and try again.'
+          });
+        };
+        
+        xhr.send(JSON.stringify({ message }));
+      });
+    }
+
+    // Regular fetch for other browsers
     const response = await fetch(getApiUrl('chat'), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
       body: JSON.stringify({ message })
     });
-
-    console.log('Chat response status:', response.status);
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const data = await response.json();
-    console.log('Chat response:', data);
-    
     return {
       success: true,
       response: data.response || data.message || 'No response received',
