@@ -26,13 +26,26 @@ app.use(helmet({
 }));
 
 // Environment-specific CORS configuration
-// In server/app.js
 app.use(cors({
     origin: environment.ALLOWED_ORIGINS,
     methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    allowedHeaders: [
+      'Content-Type', 
+      'Authorization', 
+      'Accept',
+      'Cache-Control',
+      'Pragma'
+    ],
     credentials: true
 }));
+
+// Add a specific mobile check endpoint
+app.get('/api/mobile-status', (req, res) => {
+    res.json({
+        status: 'online',
+        clientType: 'mobile'
+    });
+})
 
 // Add OPTIONS handling for preflight requests
 app.options('*', cors());

@@ -1,19 +1,47 @@
 import { getApiUrl } from '@/config/api';
+const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
 export const checkServerConnection = async () => {
   try {
-    const response = await fetch(getApiUrl('status'));
+    console.log('Device type:', isMobile ? 'Mobile' : 'Desktop');
+    
+    const headers = {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    };
+
+    // Special handling for mobile
+    if (isMobile) {
+      headers['Cache-Control'] = 'no-cache';
+      headers['Pragma'] = 'no-cache';
+    }
+
+    const response = await fetch(getApiUrl('status'), {
+      method: 'GET',
+      headers: headers,
+      mode: 'cors',
+      cache: 'no-cache'
+    });
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
+
     const data = await response.json();
+    console.log('Server responded:', data);
+
     return {
       status: data.status,
       secure: data.secure,
       error: null
     };
   } catch (error) {
-    console.error('Server connection check failed:', error);
+    console.error('Connection check failed:', {
+      isMobile,
+      error: error.toString(),
+      url: getApiUrl('status')
+    });
+
     return {
       status: 'offline',
       secure: false,
