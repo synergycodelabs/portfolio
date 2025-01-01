@@ -1,25 +1,20 @@
 import { getApiUrl } from '@/config/api';
 
+// In connectionHelper.js
 export const checkServerConnection = async () => {
   try {
     console.log('Checking server connection...');
     const url = getApiUrl('status');
     console.log('API URL:', url);
-    console.log('Origin:', window.location.origin);
 
+    // Simplified fetch request without credentials
     const response = await fetch(url, {
       method: 'GET',
       mode: 'cors',
-      credentials: 'include',
       headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      },
-      cache: 'no-cache'
+        'Accept': 'application/json'
+      }
     });
-
-    console.log('Response status:', response.status);
-    console.log('Response headers:', Object.fromEntries([...response.headers]));
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -38,8 +33,7 @@ export const checkServerConnection = async () => {
       error: error.toString(),
       message: error.message,
       type: error.name,
-      url: getApiUrl('status'),
-      origin: window.location.origin
+      url: getApiUrl('status')
     });
 
     return {

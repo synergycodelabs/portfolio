@@ -25,16 +25,11 @@ app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 
-// Environment-specific CORS configuration
+// Simplify CORS configuration
 app.use(cors({
-    origin: function(origin, callback) {
-        console.log('Request origin:', origin);
-        callback(null, true);
-    },
+    origin: '*',
     methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-    credentials: true,
-    preflightContinue: false,
+    allowedHeaders: ['Accept', 'Content-Type'],
     optionsSuccessStatus: 204
 }));
 
