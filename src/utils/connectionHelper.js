@@ -7,10 +7,10 @@ const isMobile = /iPhone|iPad|iPod|Android|Windows Phone|IEMobile/i.test(navigat
 const isEdge = /Edg/i.test(navigator.userAgent);
 
 /**
- * Check server connection – 
- *   1) If mobile + Edge, use an XHR approach first. 
- *   2) If that fails, try a simple HEAD request w/ no-cors. 
- *   3) Otherwise, just do a normal fetch.
+ * Check server connection
+ *  - If mobile + Edge, use an XHR approach for GET /status
+ *  - On XHR failure, attempt HEAD no-cors ping
+ *  - Otherwise, normal fetch for other browsers
  */
 export const checkServerConnection = async () => {
   try {
@@ -26,7 +26,7 @@ export const checkServerConnection = async () => {
     // Special handling for Edge mobile
     if (isMobile && isEdge) {
       try {
-        // Use XMLHttpRequest for status
+        // Use XMLHttpRequest for GET
         const responseText = await new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
           xhr.timeout = 5000; // 5 second timeout
@@ -48,6 +48,7 @@ export const checkServerConnection = async () => {
 
         const data = JSON.parse(responseText);
         console.log('XHR succeeded:', data);
+
         return {
           status: data.status || 'online',
           secure: data.secure || false,
@@ -106,20 +107,17 @@ export const checkServerConnection = async () => {
 };
 
 /**
- * Send chat message – 
- *   1) If mobile + Edge, use XMLHttpRequest for POST. 
- *   2) Otherwise, normal fetch.
+ * Send chat message
+ *  - If mobile + Edge, use XMLHttpRequest for POST
+ *  - Otherwise, normal fetch for other browsers
  */
 export const sendChatMessage = async (message) => {
   try {
     console.log('Sending chat message to:', getApiUrl('chat'));
-
-    // Re-detect for clarity
-    const isMobile = /iPhone|iPad|iPod|Android|Windows Phone|IEMobile/i.test(navigator.userAgent);
-    const isEdge = /Edg/i.test(navigator.userAgent);
+    console.log('Browser details for chat:', { isMobile, isEdge });
 
     if (isMobile && isEdge) {
-      // XHR approach for Edge mobile
+      // Special handling for Edge mobile
       return new Promise((resolve) => {
         const xhr = new XMLHttpRequest();
         xhr.open('POST', getApiUrl('chat'), true);
@@ -155,8 +153,7 @@ export const sendChatMessage = async (message) => {
           resolve({
             success: false,
             response: null,
-            error:
-              'Unable to connect to the server. Please check your internet connection and try again.',
+            error: 'Unable to connect to the server. Please check your internet connection and try again.',
           });
         };
 
@@ -164,7 +161,7 @@ export const sendChatMessage = async (message) => {
       });
     }
 
-    // Normal fetch for other browsers
+    // Regular fetch for other browsers
     const response = await fetch(getApiUrl('chat'), {
       method: 'POST',
       headers: {
