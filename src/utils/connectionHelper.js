@@ -1,8 +1,10 @@
 import { getApiUrl } from '@/config/api';
 
+// Browser detection
 const isMobile = /iPhone|iPad|iPod|Android|Windows Phone|IEMobile/i.test(navigator.userAgent);
 const isEdge = /Edg/i.test(navigator.userAgent);
 
+// Test different fetch configurations
 const testFetchConfigs = async (url) => {
   const configs = [
     {
@@ -90,6 +92,7 @@ const testFetchConfigs = async (url) => {
   }
 };
 
+// Check server connection
 export const checkServerConnection = async () => {
   try {
     console.log('Browser details:', {
@@ -138,6 +141,7 @@ export const checkServerConnection = async () => {
   }
 };
 
+// Send chat message
 export const sendChatMessage = async (message) => {
   try {
     console.log('Sending chat message to:', getApiUrl('chat'));
