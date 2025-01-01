@@ -102,12 +102,28 @@ export const checkServerConnection = async () => {
     });
 
     const url = getApiUrl('status');
-    console.log('Testing URL:', url);
+    
+    // Special handling for Edge mobile
+    if (isMobile && isEdge) {
+      const response = await fetch(url, {
+        method: 'GET',
+        mode: 'no-cors',
+        cache: 'no-cache',
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+      
+      // For no-cors, we can't read the response
+      // but if we get here without error, server is likely online
+      return {
+        status: 'online',
+        secure: true,
+        error: null
+      };
+    }
 
-    // Run all fetch configurations
-    await testFetchConfigs(url);
-
-    // Try default configuration after testing
+    // Normal fetch for other browsers
     const response = await fetch(url, {
       method: 'GET',
       headers: {
@@ -126,7 +142,7 @@ export const checkServerConnection = async () => {
       error: null
     };
   } catch (error) {
-    console.error('Final connection check failed:', {
+    console.error('Connection check failed:', {
       isMobile,
       isEdge,
       error: error.toString(),

@@ -25,13 +25,26 @@ app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 
-// Environment-specific CORS configuration
-// In server/app.js
+// Environment-specific CORS configurationp.js
 app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-    res.header('Access-Control-Max-Age', '86400'); // 24 hours
+    // Allow Edge mobile specifically
+    const userAgent = req.headers['user-agent'];
+    const isEdge = /Edg/i.test(userAgent);
+    
+    if (isEdge) {
+      res.header('Access-Control-Allow-Origin', '*');
+      res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+      res.header('Access-Control-Allow-Headers', '*');
+      res.header('Access-Control-Max-Age', '86400');
+    } else {
+      res.header('Access-Control-Allow-Origin', environment.ALLOWED_ORIGINS);
+      res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+      res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
+    }
+    
+    if (req.method === 'OPTIONS') {
+      return res.sendStatus(200);
+    }
     next();
   });
   
