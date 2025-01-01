@@ -1,41 +1,19 @@
 import { getApiUrl } from '@/config/api';
 
-// In connectionHelper.js
 export const checkServerConnection = async () => {
   try {
-    console.log('Checking server connection...');
-    const url = getApiUrl('status');
-    console.log('API URL:', url);
-
-    // Simplified fetch request without credentials
-    const response = await fetch(url, {
-      method: 'GET',
-      mode: 'cors',
-      headers: {
-        'Accept': 'application/json'
-      }
-    });
-
+    const response = await fetch(getApiUrl('status'));
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-
     const data = await response.json();
-    console.log('Server response:', data);
-
     return {
       status: data.status,
       secure: data.secure,
       error: null
     };
   } catch (error) {
-    console.error('Server connection check failed:', {
-      error: error.toString(),
-      message: error.message,
-      type: error.name,
-      url: getApiUrl('status')
-    });
-
+    console.error('Server connection check failed:', error);
     return {
       status: 'offline',
       secure: false,
