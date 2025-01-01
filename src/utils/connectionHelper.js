@@ -1,269 +1,264 @@
 import { getApiUrl } from '@/config/api';
 
-// Browser detection
+/**
+ * Detect whether the user is on a mobile browser.
+ */
 const isMobile = /iPhone|iPad|iPod|Android|Windows Phone|IEMobile/i.test(navigator.userAgent);
-const isEdge = /Edg/i.test(navigator.userAgent);
 
-// Test different fetch configurations
+/**
+ * Attempt a network request via XMLHttpRequest first, then fallback to fetch with no-cors if it fails.
+ * This is designed to accommodate stricter mobile browsers (Edge, Firefox, Chrome on mobile, etc.).
+ *
+ * @param {string} url - The URL to request.
+ * @param {object} [options={}] - Optional configurations (method, headers, body, etc.).
+ * @returns {Promise<Response>} - A promise that resolves with a "Response-like" object.
+ */
+async function mobileRequest(url, options = {}) {
+  // Try XMLHttpRequest first
+  try {
+    return await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open(options.method || 'GET', url, true);
+
+      // If there are headers, set them
+      if (options.headers) {
+        Object.entries(options.headers).forEach(([key, value]) => {
+          xhr.setRequestHeader(key, value);
+        });
+      }
+
+      // If there's a timeout or advanced config, you can set it here
+      xhr.timeout = 5000; // 5-second timeout (example)
+
+      xhr.onload = () => {
+        if (xhr.status === 200) {
+          try {
+            // Attempt to parse JSON
+            const data = JSON.parse(xhr.responseText);
+            // Mimic the Fetch API's Response object
+            resolve({
+              ok: true,
+              status: xhr.status,
+              json: () => Promise.resolve(data),
+              text: () => Promise.resolve(xhr.responseText),
+            });
+          } catch (e) {
+            // If not valid JSON, still return something usable
+            resolve({
+              ok: true,
+              status: xhr.status,
+              text: () => Promise.resolve(xhr.responseText),
+            });
+          }
+        } else {
+          reject(new Error(`HTTP ${xhr.status}`));
+        }
+      };
+
+      xhr.onerror = () => {
+        reject(new Error('Network error'));
+      };
+
+      xhr.ontimeout = () => {
+        reject(new Error('XHR timeout'));
+      };
+
+      // Send the body if present (for POST requests)
+      xhr.send(options.body || null);
+    });
+  } catch (xhrError) {
+    console.log('XMLHttpRequest failed, trying fetch no-cors fallback:', xhrError);
+
+    // Fallback to fetch with no-cors
+    return fetch(url, {
+      ...options,
+      mode: 'no-cors',
+      credentials: 'omit', // be sure credentials are omitted
+    });
+  }
+}
+
+/**
+ * (Optional) A function to test different fetch configurations.
+ * Useful for debugging if you still want to see how each config behaves on mobile.
+ */
 const testFetchConfigs = async (url) => {
   const configs = [
     {
-      name: "Basic fetch",
-      config: {
-        method: 'GET'
-      }
+      name: 'Basic fetch',
+      config: { method: 'GET' },
     },
     {
-      name: "No-cors mode",
-      config: {
-        method: 'GET',
-        mode: 'no-cors'
-      }
+      name: 'No-cors mode',
+      config: { method: 'GET', mode: 'no-cors' },
     },
     {
-      name: "With credentials",
-      config: {
-        method: 'GET',
-        credentials: 'include',
-        mode: 'cors'
-      }
+      name: 'With credentials',
+      config: { method: 'GET', credentials: 'include', mode: 'cors' },
     },
     {
-      name: "Without credentials",
-      config: {
-        method: 'GET',
-        credentials: 'omit',
-        mode: 'cors'
-      }
+      name: 'Without credentials',
+      config: { method: 'GET', credentials: 'omit', mode: 'cors' },
     },
     {
-      name: "With headers",
+      name: 'With headers',
       config: {
         method: 'GET',
         headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        }
-      }
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+      },
     },
     {
-      name: "With cache control",
+      name: 'With cache control',
       config: {
         method: 'GET',
         cache: 'no-cache',
         headers: {
           'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
-        }
-      }
-    }
+          Pragma: 'no-cache',
+        },
+      },
+    },
   ];
 
   console.log('Starting fetch tests...');
-  
-  for (const {name, config} of configs) {
+
+  for (const { name, config } of configs) {
     try {
       console.log(`Testing ${name}...`);
       console.log('Config:', config);
-      
+
       const response = await fetch(url, config);
       const status = response.status;
       let data = null;
-      
+
       try {
         data = await response.json();
       } catch (e) {
         console.log(`${name} - Could not parse JSON:`, e.message);
       }
-      
+
       console.log(`${name} Results:`, {
         success: response.ok,
         status,
         data,
-        headers: Object.fromEntries([...response.headers])
+        headers: Object.fromEntries([...response.headers]),
       });
     } catch (error) {
       console.log(`${name} Failed:`, {
         error: error.toString(),
         type: error.name,
-        message: error.message
+        message: error.message,
       });
     }
   }
 };
 
-// Check server connection
-// In connectionHelper.js
+/**
+ * Check server connection, using a mobile fallback if on a mobile browser.
+ */
 export const checkServerConnection = async () => {
   try {
-    console.log('Browser details:', {
-      isMobile,
-      isEdge,
-      userAgent: navigator.userAgent
-    });
-
     const url = getApiUrl('status');
-    
-    // Try direct status check first
-    if (isMobile && isEdge) {
-      try {
-        // Direct XMLHttpRequest check
-        const response = await new Promise((resolve, reject) => {
-          const xhr = new XMLHttpRequest();
-          xhr.timeout = 5000; // 5 second timeout
-          xhr.open('GET', url, true);
-          
-          xhr.onload = () => {
-            if (xhr.status === 200) {
-              resolve(xhr.responseText);
-            } else {
-              reject(new Error(`HTTP ${xhr.status}`));
-            }
-          };
-          
-          xhr.onerror = () => reject(new Error('XHR failed'));
-          xhr.ontimeout = () => reject(new Error('XHR timeout'));
-          
-          xhr.send();
-        });
+    console.log('checkServerConnection -> URL:', url);
+    console.log('checkServerConnection -> isMobile:', isMobile);
 
-        const data = JSON.parse(response);
-        console.log('XHR succeeded:', data);
-        
-        return {
-          status: data.status || 'online',
-          secure: true,
-          error: null
-        };
-      } catch (xhrError) {
-        console.log('XHR failed, trying ping check:', xhrError);
-        
-        // If XHR fails, try a simple fetch to check connectivity
-        const pingResponse = await fetch(url, {
-          method: 'HEAD',
-          mode: 'no-cors'
-        });
-        
-        // If we get here without error, assume we're online
-        return {
-          status: 'online',
-          secure: true,
-          error: null
-        };
-      }
+    // (Optional) Test different fetch configs if you still want debugging
+    // await testFetchConfigs(url);
+
+    let response;
+    if (isMobile) {
+      // Use the mobileRequest fallback approach
+      response = await mobileRequest(url, {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json',
+        },
+      });
+    } else {
+      // Desktop / non-mobile can use normal fetch
+      response = await fetch(url, {
+        method: 'GET',
+        headers: { Accept: 'application/json' },
+      });
     }
-
-    // Default fetch for non-Edge-mobile browsers
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json'
-      }
-    });
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const data = await response.json();
+    let data;
+    try {
+      data = await response.json();
+    } catch (e) {
+      console.log('Could not parse JSON for checkServerConnection:', e.message);
+      data = {};
+    }
+
+    // If the API doesn't return a "status" field, default to 'online'
     return {
-      status: data.status,
-      secure: data.secure,
-      error: null
+      status: data.status || 'online',
+      secure: true,
+      error: null,
     };
   } catch (error) {
-    console.error('Connection check failed:', {
-      isMobile,
-      isEdge,
-      error: error.toString(),
-      url: getApiUrl('status')
-    });
-
+    console.error('Connection check failed:', error);
     return {
       status: 'offline',
       secure: false,
-      error: error.message
+      error: error.message,
     };
   }
 };
 
-// Send chat message
-// In connectionHelper.js
+/**
+ * Send a chat message to the server, using a mobile fallback if on a mobile browser.
+ */
 export const sendChatMessage = async (message) => {
   try {
-    const isMobile = /iPhone|iPad|iPod|Android|Windows Phone|IEMobile/i.test(navigator.userAgent);
-    const isEdge = /Edg/i.test(navigator.userAgent);
-    
-    console.log('Sending chat message to:', getApiUrl('chat'));
-    
-    // Special handling for Edge mobile
-    if (isMobile && isEdge) {
-      return new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', getApiUrl('chat'), true);
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.setRequestHeader('Accept', 'application/json');
-        
-        xhr.onload = function() {
-          if (xhr.status === 200) {
-            try {
-              const data = JSON.parse(xhr.responseText);
-              resolve({
-                success: true,
-                response: data.response || data.message || 'No response received',
-                error: null
-              });
-            } catch (error) {
-              resolve({
-                success: false,
-                response: null,
-                error: 'Error parsing response'
-              });
-            }
-          } else {
-            resolve({
-              success: false,
-              response: null,
-              error: `HTTP ${xhr.status}: ${xhr.statusText}`
-            });
-          }
-        };
-        
-        xhr.onerror = function() {
-          resolve({
-            success: false,
-            response: null,
-            error: 'Unable to connect to the server. Please check your internet connection and try again.'
-          });
-        };
-        
-        xhr.send(JSON.stringify({ message }));
-      });
-    }
+    const url = getApiUrl('chat');
+    console.log('sendChatMessage -> URL:', url, 'Message:', message);
 
-    // Regular fetch for other browsers
-    const response = await fetch(getApiUrl('chat'), {
+    let response;
+    const options = {
       method: 'POST',
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        Accept: 'application/json',
       },
-      body: JSON.stringify({ message })
-    });
+      body: JSON.stringify({ message }),
+    };
+
+    if (isMobile) {
+      // Use the mobileRequest fallback approach
+      response = await mobileRequest(url, options);
+    } else {
+      // Desktop / non-mobile can use normal fetch
+      response = await fetch(url, options);
+    }
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const data = await response.json();
+    let data;
+    try {
+      data = await response.json();
+    } catch (e) {
+      console.log('Could not parse JSON for sendChatMessage:', e.message);
+      data = {};
+    }
+
     return {
       success: true,
       response: data.response || data.message || 'No response received',
-      error: null
+      error: null,
     };
   } catch (error) {
     console.error('Chat request failed:', error);
-    
+
     const errorMessage = error.message.includes('Failed to fetch')
       ? 'Unable to connect to the server. Please check your internet connection and try again.'
       : 'Sorry, I encountered an error. Please try again later.';
@@ -271,7 +266,7 @@ export const sendChatMessage = async (message) => {
     return {
       success: false,
       response: null,
-      error: errorMessage
+      error: errorMessage,
     };
   }
 };
