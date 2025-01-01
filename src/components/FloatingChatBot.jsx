@@ -172,17 +172,17 @@ const FloatingChatBotNew = ({ theme = 'dark' }) => {
       variant="ghost"
     >
       <div className="w-9 h-9 md:w-10 md:h-10">
-        <img 
-          src="/ai-assistant-active.png" 
-          alt="AI Assistant"
-          className="w-full h-full rounded-full object-cover 
-            hover:brightness-110 transition-all duration-300"
-          onError={(e) => {
-            // Fallback to the MessageCircle icon if image fails to load
-            e.target.style.display = 'none';
-            e.target.parentElement.innerHTML = '<MessageCircle className="h-6 w-6 text-white" />';
-          }}
-        />
+      <img 
+  src={import.meta.env.PROD ? '/portfolio/ai-assistant-active.png' : '/ai-assistant-active.png'}
+  alt="AI Assistant"
+  className="w-full h-full rounded-full object-cover 
+    hover:brightness-110 transition-all duration-300"
+  onError={(e) => {
+    // Fallback to the MessageCircle icon if image fails to load
+    e.target.style.display = 'none';
+    e.target.parentElement.innerHTML = '<MessageCircle className="h-6 w-6 text-white" />';
+  }}
+/>
       </div>
     </Button>
   </div>
