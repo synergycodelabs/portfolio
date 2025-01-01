@@ -91,8 +91,8 @@ const Resume = ({ theme }) => {
           }`}>
         <div className="container mx-auto px-4 max-w-4xl">
           {/* Header Section */}
-          <div className="flex justify-between items-start mb-8 reveal opacity-0">
-            <div>
+          <div className="flex flex-col md:flex-row md:justify-between items-start mb-8 reveal opacity-0">
+            <div className="w-full md:w-auto mb-4 md:mb-0">
               <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-blue-700">
                 {contactInfo.name}
               </h1>
@@ -115,19 +115,18 @@ const Resume = ({ theme }) => {
               </div>
             </div>
             <button
-              onClick={() => window.open(`${window.location.pathname === '/' ? '' : '/portfolio-showcase'}/resume.pdf`, '_blank')}
+              onClick={() => window.open(`${window.location.pathname === '/' ? '' : '/portfolio'}/resume.pdf`, '_blank')}
               className={`${
-                theme === 'dark' 
-                  ? 'bg-gray-700 hover:bg-gray-600' 
+                theme === 'dark'
+                  ? 'bg-gray-700 hover:bg-gray-600'
                   : 'bg-gray-200 hover:bg-gray-300'
-              } px-6 py-3 rounded-lg flex items-center gap-2 transition-all duration-300 
-                hover:scale-105 hover:shadow-lg`}
+              } w-full md:w-auto px-6 py-3 rounded-lg flex items-center justify-center md:justify-start gap-2 
+              transition-all duration-300 hover:scale-105 hover:shadow-lg mt-4 md:mt-0`}
             >
               <Download className="w-5 h-5" />
               Download PDF
             </button>
           </div>
-
           {/* Professional Summary */}
           <Card className={`mb-8 reveal opacity-0 ${
             theme === 'dark' ? 'bg-gray-800/50 border-gray-700' : 'bg-white/50 border-gray-200'
