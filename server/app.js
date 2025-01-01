@@ -18,7 +18,7 @@ const app = express();
 // Load embeddings on startup
 loadEmbeddings(__dirname);
 
-// Security middleware
+// Security middleware with environment-specific settings
 app.use(
   helmet({
     contentSecurityPolicy: false,
@@ -28,24 +28,53 @@ app.use(
 );
 
 /**
- * Very permissive CORS for *all* requests:
- * - Allows any origin
- * - Allows GET, POST, OPTIONS
- * - Allows all headers
- * You can tighten this later if needed.
+ * Environment-specific CORS configuration with Edge mobile override.
+ * 
+ * 1) We detect if user-agent is Edge (Edg/i).
+ * 2) If yes, we allow '*' for origin, methods, and headers.
+ * 3) Otherwise, we allow environment.ALLOWED_ORIGINS (e.g., GitHub Pages, local dev).
  */
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.header('Access-Control-Allow-Headers', '*');
+  const userAgent = req.headers['user-agent'];
+  const isEdge = /Edg/i.test(userAgent);
 
+  if (isEdge) {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', '*');
+    res.header('Access-Control-Max-Age', '86400');
+  } else {
+    res.header('Access-Control-Allow-Origin', environment.ALLOWED_ORIGINS);
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
+  }
+
+  // Handle preflight
   if (req.method === 'OPTIONS') {
-    return res.sendStatus(204);
+    return res.sendStatus(200);
   }
   next();
 });
 
-// Parse JSON bodies
+/**
+ * Additional cors() usage – used by some setups for fallback. 
+ * Setting origin: '*' here, but we rely mainly on the above custom middleware.
+ */
+app.use(
+  cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept'],
+    optionsSuccessStatus: 204,
+  })
+);
+
+// Add OPTIONS handling for preflight requests explicitly
+app.options('*', (req, res) => {
+  res.sendStatus(204);
+});
+
+// Body parser
 app.use(express.json());
 
 // Root endpoint
