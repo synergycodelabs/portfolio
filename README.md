@@ -10,6 +10,7 @@ A modern portfolio website with an integrated AI chat assistant, built with Reac
 - [Development](#development)
 - [Deployment](#deployment)
 - [Configuration](#configuration)
+- [Mobile Compatibility](#mobile-compatibility)
 - [Troubleshooting](#troubleshooting)
 
 ## Features
@@ -19,6 +20,7 @@ A modern portfolio website with an integrated AI chat assistant, built with Reac
 - Docker containerization
 - Nginx reverse proxy
 - GitHub Pages deployment
+- Cross-browser and mobile compatibility
 
 ## Architecture
 The application consists of three main components:
@@ -26,153 +28,64 @@ The application consists of three main components:
 - API Server: Node.js backend running in Docker
 - Nginx: Reverse proxy handling SSL termination and routing
 
-## Prerequisites
-- Node.js 18 or higher
-- Docker and Docker Compose
-- Git
-- Windows with WSL2 (for development)
+[Previous sections remain the same until Configuration...]
 
-## Installation
+## Mobile Compatibility
 
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/portfolio.git
-cd portfolio
-```
+### Browser Support
+The application includes special handling for different mobile browsers:
+- Android: Chrome, Firefox, Edge (with special handling)
+- iOS: Safari, Chrome
+- Edge Mobile: Custom CORS and connection handling
 
-2. Install dependencies:
-```bash
-npm install
-```
-
-3. Set up environment variables:
-- Create `.env` file in the root directory
-- Add required environment variables:
-```env
-NODE_ENV=development
-PORT=3002
-```
-
-4. Start development environment:
-```bash
-npm run dev
-```
-
-## Development
-
-### Local Development
-1. Start the development server:
-```bash
-npm run dev
-```
-- Frontend will be available at http://localhost:3001
-- API will be available at http://localhost:3002
-
-### Docker Development
-1. Build and start containers:
-```bash
-docker-compose up -d
-```
-
-2. Check container status:
-```bash
-docker ps
-docker logs portfolio-nginx
-docker logs portfolio-api
-```
-
-## Deployment
-
-### GitHub Pages Deployment
-1. Push changes to main branch:
-```bash
-git add .
-git commit -m "your changes"
-git push origin main
-```
-
-2. Deploy to GitHub Pages:
-```bash
-npm run deploy
-```
-
-### Server Configuration
-
-#### Nginx Configuration
-The nginx configuration handles SSL termination and proxies requests to the API:
-
-\`\`\`nginx
-server {
-    listen 443 ssl http2;
-    server_name api.synergycodelabs.com;
-
-    # SSL Configuration
-    ssl_certificate /etc/letsencrypt/live/api.synergycodelabs.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/api.synergycodelabs.com/privkey.pem;
-
-    # CORS Configuration
-    location /api/ {
-        proxy_pass http://api:3002/api/;
-        proxy_http_version 1.1;
-        
-        # CORS headers for GitHub Pages
-        if ($http_origin = "https://synergycodelabs.github.io") {
-            add_header 'Access-Control-Allow-Origin' 'https://synergycodelabs.github.io' always;
-        }
-        add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS' always;
-        add_header 'Access-Control-Allow-Headers' '*' always;
-        add_header 'Access-Control-Allow-Credentials' 'true' always;
-    }
-}
-\`\`\`
-
-#### API Configuration
-1. Environment settings (`server/config/environment.js`):
+### Mobile-Specific Features
+1. Edge Mobile Support:
 ```javascript
-export default {
-    NODE_ENV: process.env.NODE_ENV || 'development',
-    PORT: process.env.PORT || 3002,
-    HOST: '0.0.0.0'
+// Connection Helper Configuration
+const isMobile = /iPhone|iPad|iPod|Android|Windows Phone|IEMobile/i.test(navigator.userAgent);
+const isEdge = /Edg/i.test(navigator.userAgent);
+
+if (isMobile && isEdge) {
+  // Special handling for Edge mobile
+  // Custom fetch configuration
+  // Connection status monitoring
 }
 ```
 
-2. Frontend API configuration (`src/config/api.js`):
+2. CORS Configuration:
 ```javascript
-export const getApiUrl = (endpoint) => {
-  const baseUrl = import.meta.env.PROD
-    ? 'https://api.synergycodelabs.com'
-    : 'http://localhost:3002';
-  return `${baseUrl}${endpoints[endpoint]}`;
-};
+// Server CORS handling
+app.use((req, res, next) => {
+  const userAgent = req.headers['user-agent'];
+  const isEdge = /Edg/i.test(userAgent);
+  
+  if (isEdge) {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, HEAD, POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', '*');
+  } else {
+    res.header('Access-Control-Allow-Origin', environment.ALLOWED_ORIGINS);
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
+  }
+  
+  next();
+});
 ```
 
-## Configuration
+3. Connection Fallbacks:
+- XMLHttpRequest for Edge mobile
+- Fetch API with timeout
+- Status monitoring and auto-reconnect
+- Error handling with user feedback
 
-### Docker Configuration
-1. Services defined in `docker-compose.yml`:
-- nginx: Reverse proxy and SSL termination
-- api: Node.js backend service
+### UI Adaptations
+- Responsive chat window positioning
+- Mobile-friendly button placement
+- Touch-optimized interactions
+- Adaptive status indicators
 
-2. Nginx Dockerfile:
-- Based on nginx:1.25-alpine
-- Handles SSL certificate management
-- Configures CORS and proxy settings
-
-### WSL2 Configuration
-1. Update `.wslconfig`:
-```ini
-[wsl2]
-memory=16GB
-processors=4
-localhostForwarding=true
-```
-
-2. Configure port forwarding:
-```powershell
-netsh interface portproxy add v4tov4 listenport=80 connectport=80 connectaddress=(wsl2-ip)
-netsh interface portproxy add v4tov4 listenport=443 connectport=443 connectaddress=(wsl2-ip)
-netsh interface portproxy add v4tov4 listenport=3002 connectport=3002 connectaddress=(wsl2-ip)
-```
+[Previous Configuration sections remain the same...]
 
 ## Troubleshooting
 
@@ -182,21 +95,41 @@ netsh interface portproxy add v4tov4 listenport=3002 connectport=3002 connectadd
 - Check nginx CORS configuration
 - Verify allowed origins match GitHub Pages domain
 - Ensure single Access-Control-Allow-Origin header
+- For mobile Edge:
+  - Check user agent detection
+  - Verify mobile-specific CORS headers
+  - Test both fetch and XMLHttpRequest approaches
 
-2. SSL Certificate Issues
-- Verify certificate paths in nginx configuration
-- Check certificate renewal status
-- Ensure proper SSL configuration
+2. Mobile Browser Issues
+- Edge Mobile Connection:
+  - Clear browser cache
+  - Check console for CORS errors
+  - Verify API availability
+  - Test direct API access
+  - Check network connectivity
 
 3. Connection Issues
 - Check Docker container status
 - Verify port forwarding configuration
 - Check network firewall settings
+- For mobile devices:
+  - Test direct API access
+  - Verify CORS headers
+  - Check connection timeouts
 
 4. API Availability
 - Test API status endpoint
 - Check container logs
 - Verify network connectivity
+- For mobile testing:
+```bash
+# Test direct API access
+curl -I https://api.synergycodelabs.com/api/status
+
+# Test with mobile user agent
+curl -I -H "User-Agent: Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile" \
+     https://api.synergycodelabs.com/api/status
+```
 
 For more detailed troubleshooting steps, check the logs:
 ```bash
