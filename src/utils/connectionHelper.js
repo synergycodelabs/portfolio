@@ -1,37 +1,118 @@
 import { getApiUrl } from '@/config/api';
 
-/**
- * Detect mobile and Edge specifically.
- */
+// Browser detection
 const isMobile = /iPhone|iPad|iPod|Android|Windows Phone|IEMobile/i.test(navigator.userAgent);
 const isEdge = /Edg/i.test(navigator.userAgent);
 
-/**
- * Check server connection
- *  - If mobile + Edge, use an XHR approach for GET /status
- *  - On XHR failure, attempt HEAD no-cors ping
- *  - Otherwise, normal fetch for other browsers
- */
+// Test different fetch configurations
+const testFetchConfigs = async (url) => {
+  const configs = [
+    {
+      name: "Basic fetch",
+      config: {
+        method: 'GET'
+      }
+    },
+    {
+      name: "No-cors mode",
+      config: {
+        method: 'GET',
+        mode: 'no-cors'
+      }
+    },
+    {
+      name: "With credentials",
+      config: {
+        method: 'GET',
+        credentials: 'include',
+        mode: 'cors'
+      }
+    },
+    {
+      name: "Without credentials",
+      config: {
+        method: 'GET',
+        credentials: 'omit',
+        mode: 'cors'
+      }
+    },
+    {
+      name: "With headers",
+      config: {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      }
+    },
+    {
+      name: "With cache control",
+      config: {
+        method: 'GET',
+        cache: 'no-cache',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      }
+    }
+  ];
+
+  console.log('Starting fetch tests...');
+  
+  for (const {name, config} of configs) {
+    try {
+      console.log(`Testing ${name}...`);
+      console.log('Config:', config);
+      
+      const response = await fetch(url, config);
+      const status = response.status;
+      let data = null;
+      
+      try {
+        data = await response.json();
+      } catch (e) {
+        console.log(`${name} - Could not parse JSON:`, e.message);
+      }
+      
+      console.log(`${name} Results:`, {
+        success: response.ok,
+        status,
+        data,
+        headers: Object.fromEntries([...response.headers])
+      });
+    } catch (error) {
+      console.log(`${name} Failed:`, {
+        error: error.toString(),
+        type: error.name,
+        message: error.message
+      });
+    }
+  }
+};
+
+// Check server connection
+// In connectionHelper.js
 export const checkServerConnection = async () => {
   try {
     console.log('Browser details:', {
       isMobile,
       isEdge,
-      userAgent: navigator.userAgent,
+      userAgent: navigator.userAgent
     });
 
     const url = getApiUrl('status');
-    console.log('API URL:', url);
-
-    // Special handling for Edge mobile
+    
+    // Try direct status check first
     if (isMobile && isEdge) {
       try {
-        // Use XMLHttpRequest for GET
-        const responseText = await new Promise((resolve, reject) => {
+        // Direct XMLHttpRequest check
+        const response = await new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
           xhr.timeout = 5000; // 5 second timeout
           xhr.open('GET', url, true);
-
+          
           xhr.onload = () => {
             if (xhr.status === 200) {
               resolve(xhr.responseText);
@@ -39,45 +120,45 @@ export const checkServerConnection = async () => {
               reject(new Error(`HTTP ${xhr.status}`));
             }
           };
-
+          
           xhr.onerror = () => reject(new Error('XHR failed'));
           xhr.ontimeout = () => reject(new Error('XHR timeout'));
-
+          
           xhr.send();
         });
 
-        const data = JSON.parse(responseText);
+        const data = JSON.parse(response);
         console.log('XHR succeeded:', data);
-
+        
         return {
           status: data.status || 'online',
-          secure: data.secure || false,
-          error: null,
+          secure: true,
+          error: null
         };
       } catch (xhrError) {
-        console.log('XHR failed, trying HEAD check:', xhrError);
-
-        // If XHR fails, do a HEAD request in no-cors
-        await fetch(url, {
+        console.log('XHR failed, trying ping check:', xhrError);
+        
+        // If XHR fails, try a simple fetch to check connectivity
+        const pingResponse = await fetch(url, {
           method: 'HEAD',
-          mode: 'no-cors',
+          mode: 'no-cors'
         });
-
-        // If we get here without an exception, assume online
+        
+        // If we get here without error, assume we're online
         return {
           status: 'online',
-          secure: false,
-          error: null,
+          secure: true,
+          error: null
         };
       }
     }
 
-    // Default fetch for other browsers
+    // Default fetch for non-Edge-mobile browsers
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        Accept: 'application/json',
-      },
+        'Accept': 'application/json'
+      }
     });
 
     if (!response.ok) {
@@ -86,77 +167,76 @@ export const checkServerConnection = async () => {
 
     const data = await response.json();
     return {
-      status: data.status || 'online',
-      secure: data.secure || false,
-      error: null,
+      status: data.status,
+      secure: data.secure,
+      error: null
     };
   } catch (error) {
     console.error('Connection check failed:', {
       isMobile,
       isEdge,
       error: error.toString(),
-      url: getApiUrl('status'),
+      url: getApiUrl('status')
     });
 
     return {
       status: 'offline',
       secure: false,
-      error: error.message,
+      error: error.message
     };
   }
 };
 
-/**
- * Send chat message
- *  - If mobile + Edge, use XMLHttpRequest for POST
- *  - Otherwise, normal fetch for other browsers
- */
+// Send chat message
+// In connectionHelper.js
 export const sendChatMessage = async (message) => {
   try {
+    const isMobile = /iPhone|iPad|iPod|Android|Windows Phone|IEMobile/i.test(navigator.userAgent);
+    const isEdge = /Edg/i.test(navigator.userAgent);
+    
     console.log('Sending chat message to:', getApiUrl('chat'));
-    console.log('Browser details for chat:', { isMobile, isEdge });
-
+    
+    // Special handling for Edge mobile
     if (isMobile && isEdge) {
-      // Special handling for Edge mobile
-      return new Promise((resolve) => {
+      return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.open('POST', getApiUrl('chat'), true);
         xhr.setRequestHeader('Content-Type', 'application/json');
         xhr.setRequestHeader('Accept', 'application/json');
-
-        xhr.onload = function () {
+        
+        xhr.onload = function() {
           if (xhr.status === 200) {
             try {
               const data = JSON.parse(xhr.responseText);
               resolve({
                 success: true,
                 response: data.response || data.message || 'No response received',
-                error: null,
+                error: null
               });
-            } catch (parseErr) {
+            } catch (error) {
               resolve({
                 success: false,
                 response: null,
-                error: 'Error parsing response',
+                error: 'Error parsing response'
               });
             }
           } else {
             resolve({
               success: false,
               response: null,
-              error: `HTTP ${xhr.status}: ${xhr.statusText}`,
+              error: `HTTP ${xhr.status}: ${xhr.statusText}`
             });
           }
         };
-
-        xhr.onerror = function () {
+        
+        xhr.onerror = function() {
           resolve({
             success: false,
             response: null,
-            error: 'Unable to connect to the server. Please check your internet connection and try again.',
+            error: 'Unable to connect to the server. Please check your internet connection and try again.'
           });
         };
-
+        
         xhr.send(JSON.stringify({ message }));
       });
     }
@@ -164,11 +244,11 @@ export const sendChatMessage = async (message) => {
     // Regular fetch for other browsers
     const response = await fetch(getApiUrl('chat'), {
       method: 'POST',
-      headers: {
+      headers: { 
         'Content-Type': 'application/json',
-        Accept: 'application/json',
+        'Accept': 'application/json'
       },
-      body: JSON.stringify({ message }),
+      body: JSON.stringify({ message })
     });
 
     if (!response.ok) {
@@ -179,11 +259,11 @@ export const sendChatMessage = async (message) => {
     return {
       success: true,
       response: data.response || data.message || 'No response received',
-      error: null,
+      error: null
     };
   } catch (error) {
     console.error('Chat request failed:', error);
-
+    
     const errorMessage = error.message.includes('Failed to fetch')
       ? 'Unable to connect to the server. Please check your internet connection and try again.'
       : 'Sorry, I encountered an error. Please try again later.';
@@ -191,7 +271,7 @@ export const sendChatMessage = async (message) => {
     return {
       success: false,
       response: null,
-      error: errorMessage,
+      error: errorMessage
     };
   }
 };
