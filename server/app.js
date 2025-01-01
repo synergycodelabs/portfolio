@@ -27,7 +27,9 @@ app.use(helmet({
 
 // Environment-specific CORS configuration
 app.use(cors({
-    origin: environment.ALLOWED_ORIGINS,
+    origin: function(origin, callback) {
+        callback(null, true); // Allow all origins temporarily for testing
+    },
     methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
