@@ -11,7 +11,7 @@ const NavigationIndicator = ({ previousSection, targetSection, showHome = false 
   };
 
   return (
-    <div className="flex justify-center items-center gap-8 py-4">
+    <div className="flex justify-between items-center w-full max-w-xl mx-auto py-4">
       {previousSection && (
         <button 
           onClick={() => handleNavigation(previousSection)}
@@ -19,7 +19,9 @@ const NavigationIndicator = ({ previousSection, targetSection, showHome = false 
           aria-label={`Navigate to ${previousSection} section`}
         >
           <ArrowLeft className="w-5 h-5 animate-slide-x-reverse" />
-          <span className="text-sm">Previous: {previousSection.charAt(0).toUpperCase() + previousSection.slice(1)}</span>
+          <div className="flex items-center">
+            <span className="text-sm">Previous: {previousSection.charAt(0).toUpperCase() + previousSection.slice(1)}</span>
+          </div>
         </button>
       )}
 
@@ -39,7 +41,9 @@ const NavigationIndicator = ({ previousSection, targetSection, showHome = false 
           className="group flex items-center gap-2 text-blue-500 hover:text-blue-600 transition-colors"
           aria-label={`Navigate to ${targetSection} section`}
         >
-          <span className="text-sm">Next: {targetSection.charAt(0).toUpperCase() + targetSection.slice(1)}</span>
+          <div className="flex items-center">
+            <span className="text-sm">Next: {targetSection.charAt(0).toUpperCase() + targetSection.slice(1)}</span>
+          </div>
           <ArrowRight className="w-5 h-5 animate-slide-x" />
         </button>
       )}
