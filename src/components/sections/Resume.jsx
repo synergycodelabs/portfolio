@@ -84,11 +84,11 @@ const Resume = ({ theme }) => {
         description="Professional resume showcasing expertise in IT leadership, system administration, and technical development."
       />
 
-      <section className={`min-h-screen py-16 ${
-        theme === 'dark'
-          ? 'bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900'
-          : 'bg-gradient-to-b from-gray-50 via-white to-gray-100'
-      }`}>
+      <section id="resume-section" className={`min-h-screen py-16 ${
+            theme === 'dark'
+              ? 'bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900'
+              : 'bg-gradient-to-b from-gray-50 via-white to-gray-100'
+          }`}>
         <div className="container mx-auto px-4 max-w-4xl">
           {/* Header Section */}
           <div className="flex justify-between items-start mb-8 reveal opacity-0">

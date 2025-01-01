@@ -17,7 +17,7 @@ const WELCOME_MESSAGE = {
   content: 'Hi! How can I help you today?'
 };
 
-const FloatingChatBot = ({ theme = 'dark' }) => {
+const FloatingChatBotNew = ({ theme = 'dark' }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -27,6 +27,25 @@ const FloatingChatBot = ({ theme = 'dark' }) => {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const messagesEndRef = useRef(null);
   const connectionCheckRef = useRef(null);
+
+  // Check if we're near the resume section
+  const [isNearResume, setIsNearResume] = useState(false);
+
+  useEffect(() => {
+    const checkResumeProximity = () => {
+      const resumeSection = document.getElementById('resume-section');
+      if (resumeSection) {
+        const rect = resumeSection.getBoundingClientRect();
+        const isNear = rect.top < window.innerHeight && rect.bottom > 0;
+        setIsNearResume(isNear);
+      }
+    };
+
+    window.addEventListener('scroll', checkResumeProximity);
+    checkResumeProximity(); // Initial check
+
+    return () => window.removeEventListener('scroll', checkResumeProximity);
+  }, []);
 
   // Initialize welcome message when chat opens and server is online
   useEffect(() => {
@@ -127,23 +146,47 @@ const FloatingChatBot = ({ theme = 'dark' }) => {
 
   return (
     <ErrorBoundary>
-      <div className="fixed bottom-20 right-4 z-50">
+      <div className={`fixed ${isNearResume ? 'bottom-32' : 'bottom-20'} right-4 z-50 transition-all duration-300`}>
         {/* Floating Button */}
         {!isOpen && (
-          <Button
-            onClick={() => setIsOpen(true)}
-            className={`rounded-full p-4 shadow-lg hover:shadow-xl transition-all duration-300 ${
-              theme === 'dark' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'
-            }`}
-          >
-            <MessageCircle className="h-6 w-6 text-white" />
-          </Button>
+          <div className="fixed bottom-20 -right-5 group hover:right-4 transition-all duration-300">
+            {/* Tooltip message */}
+            <div className="absolute right-full mr-2 top-1/2 -translate-y-1/2 
+              bg-white dark:bg-gray-800 rounded-lg px-3 py-1 shadow-lg
+              opacity-0 group-hover:opacity-100 transition-opacity duration-300
+              whitespace-nowrap pointer-events-none">
+              <span className="text-sm text-gray-700 dark:text-gray-200">Let's chat!</span>
+              {/* Arrow */}
+              <div className="absolute top-1/2 right-0 -mt-2 
+                border-8 border-transparent border-l-white dark:border-l-gray-800"></div>
+            </div>
+            <Button
+              onClick={() => setIsOpen(true)}
+              className="shadow-lg hover:shadow-xl transition-all duration-300 
+                flex items-center justify-center p-0
+                hover:scale-105"
+              variant="ghost"
+            >
+              <div className="w-9 h-9 md:w-10 md:h-10">
+                <img 
+                  src="/ai-assistant-active.png" 
+                  alt="AI Assistant"
+                  className="w-full h-full rounded-full object-cover 
+                    hover:brightness-110 transition-all duration-300"
+                  onError={(e) => {
+                    // Fallback to the MessageCircle icon if image fails to load
+                    e.target.style.display = 'none';
+                    e.target.parentElement.innerHTML = '<MessageCircle className="h-6 w-6 text-white" />';
+                  }}
+                />
+              </div>
+            </Button>
+          </div>
         )}
-
         {/* Chat Window */}
         {isOpen && (
           <div
-            className={`w-96 h-[500px] rounded-lg shadow-xl flex flex-col ${
+            className={`w-80 md:w-96 h-[500px] rounded-lg shadow-xl flex flex-col ${
               theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'
             } ${isTransitioning ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}
             transition-all duration-300 ease-in-out`}
@@ -256,4 +299,4 @@ const FloatingChatBot = ({ theme = 'dark' }) => {
   );
 };
 
-export default FloatingChatBot;
+export default FloatingChatBotNew;
