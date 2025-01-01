@@ -149,10 +149,10 @@ const FloatingChatBotNew = ({ theme = 'dark' }) => {
       <div className={`fixed ${isNearResume ? 'bottom-32' : 'bottom-20'} right-4 z-50 transition-all duration-300`}>
 {/* Floating Button */}
 {!isOpen && (
-  <div className="fixed bottom-20 -right-5 group hover:right-4 transition-all duration-300 z-50">
-    {/* Tooltip message */}
+  <div className="fixed bottom-20 right-4 md:-right-5 md:hover:right-4 transition-all duration-300 z-[9999]">
+    {/* Tooltip message - simplified version */}
     <div className="absolute right-full mr-2 top-1/2 -translate-y-1/2 
-      bg-white dark:bg-gray-800 rounded-lg px-3 py-1 shadow-lg
+      hidden md:block bg-white dark:bg-gray-800 rounded-lg px-3 py-1 shadow-lg
       opacity-0 group-hover:opacity-100 transition-opacity duration-300
       whitespace-nowrap pointer-events-none">
       <span className="text-sm text-gray-700 dark:text-gray-200">Let's chat!</span>
