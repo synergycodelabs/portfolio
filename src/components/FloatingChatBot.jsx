@@ -147,42 +147,44 @@ const FloatingChatBotNew = ({ theme = 'dark' }) => {
   return (
     <ErrorBoundary>
       <div className={`fixed ${isNearResume ? 'bottom-32' : 'bottom-20'} right-4 z-50 transition-all duration-300`}>
-        {/* Floating Button */}
-        {!isOpen && (
-          <div className="fixed bottom-20 -right-5 group hover:right-4 transition-all duration-300 z-[9999]">
-            {/* Tooltip message */}
-            <div className="absolute right-full mr-2 top-1/2 -translate-y-1/2 
-              bg-white dark:bg-gray-800 rounded-lg px-3 py-1 shadow-lg
-              opacity-0 group-hover:opacity-100 transition-opacity duration-300
-              whitespace-nowrap pointer-events-none">
-              <span className="text-sm text-gray-700 dark:text-gray-200">Let's chat!</span>
-              {/* Arrow */}
-              <div className="absolute top-1/2 right-0 -mt-2 
-                border-8 border-transparent border-l-white dark:border-l-gray-800"></div>
-            </div>
-            <Button
-              onClick={() => setIsOpen(true)}
-              className="shadow-lg hover:shadow-xl transition-all duration-300 
-                flex items-center justify-center p-0
-                hover:scale-105"
-              variant="ghost"
-            >
-              <div className="w-9 h-9 md:w-10 md:h-10">
-                <img 
-                  src="/ai-assistant-active.png" 
-                  alt="AI Assistant"
-                  className="w-full h-full rounded-full object-cover 
-                    hover:brightness-110 transition-all duration-300"
-                  onError={(e) => {
-                    // Fallback to the MessageCircle icon if image fails to load
-                    e.target.style.display = 'none';
-                    e.target.parentElement.innerHTML = '<MessageCircle className="h-6 w-6 text-white" />';
-                  }}
-                />
-              </div>
-            </Button>
-          </div>
-        )}
+{/* Floating Button */}
+{!isOpen && (
+  <div style={{ position: 'fixed', bottom: '20%', zIndex: 9999 }} 
+       className="-right-5 group hover:right-4 transition-all duration-300">
+    {/* Rest of the button code stays exactly the same */}
+    <div className="absolute right-full mr-3 top-1/2 -translate-y-1/2 
+      opacity-0 group-hover:opacity-100 transition-all duration-300
+      whitespace-nowrap pointer-events-none">
+      <span className={`text-sm font-bold ${
+        theme === 'dark' 
+          ? 'text-transparent [-webkit-text-stroke:1px_white]'
+          : 'text-transparent [-webkit-text-stroke:1px_black]'
+      }`}>
+        Let's chat!
+      </span>
+    </div>
+    <Button
+      onClick={() => setIsOpen(true)}
+      className="shadow-lg hover:shadow-xl transition-all duration-300 
+        flex items-center justify-center p-0
+        hover:scale-105"
+      variant="ghost"
+    >
+      <div className="w-9 h-9 md:w-10 md:h-10">
+        <img 
+          src="/ai-assistant-active.png" 
+          alt="AI Assistant"
+          className="w-full h-full rounded-full object-cover 
+            hover:brightness-110 transition-all duration-300"
+          onError={(e) => {
+            e.target.style.display = 'none';
+            e.target.parentElement.innerHTML = '<MessageCircle className="h-6 w-6 text-white" />';
+          }}
+        />
+      </div>
+    </Button>
+  </div>
+)}
         {/* Chat Window */}
         {isOpen && (
           <div
