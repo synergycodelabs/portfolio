@@ -25,51 +25,38 @@ app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 
-// Environment-specific CORS configurationp.js
+// Add specific mobile endpoint
+app.head('/api/status', (req, res) => {
+  res.status(200).end();
+});
+
+// Unified CORS configuration
 app.use((req, res, next) => {
-    // Allow Edge mobile specifically
-    const userAgent = req.headers['user-agent'];
-    const isEdge = /Edg/i.test(userAgent);
-    
-    if (isEdge) {
-      res.header('Access-Control-Allow-Origin', '*');
-      res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-      res.header('Access-Control-Allow-Headers', '*');
-      res.header('Access-Control-Max-Age', '86400');
-    } else {
-      res.header('Access-Control-Allow-Origin', environment.ALLOWED_ORIGINS);
-      res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-      res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
-    }
-    
-    if (req.method === 'OPTIONS') {
-      return res.sendStatus(200);
-    }
-    next();
-  });
+  // Allow any options requests
+  if (req.method === 'OPTIONS') {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, HEAD, POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', '*');
+    res.header('Access-Control-Max-Age', '86400');
+    return res.status(204).end();
+  }
   
-  app.use(cors({
-    origin: '*',
-    methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept'],
-    optionsSuccessStatus: 204
-  }));
+  // Check if it's a mobile Edge request
+  const userAgent = req.headers['user-agent'];
+  const isEdge = /Edg/i.test(userAgent);
   
-  // Handle OPTIONS preflight
-  app.options('*', (req, res) => {
-    res.sendStatus(204);
-  });
-
-// Add a specific mobile check endpoint
-app.get('/api/mobile-status', (req, res) => {
-    res.json({
-        status: 'online',
-        clientType: 'mobile'
-    });
-})
-
-// Add OPTIONS handling for preflight requests
-app.options('*', cors());
+  if (isEdge) {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, HEAD, POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', '*');
+  } else {
+    res.header('Access-Control-Allow-Origin', environment.ALLOWED_ORIGINS);
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
+  }
+  
+  next();
+});
 
 // Body parser
 app.use(express.json());
