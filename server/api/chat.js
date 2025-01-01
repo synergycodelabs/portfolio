@@ -30,7 +30,7 @@ export default async function handler(req, res) {
 
     // Generate chat completion
     const completion = await openai.chat.completions.create({
-      model: "gpt-4",  // Use your preferred model
+      model: "gpt-4o-mini",  // Use your preferred model
       messages: [
         {
           role: "system",
