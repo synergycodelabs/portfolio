@@ -10,59 +10,34 @@ export const checkServerConnection = async () => {
       isEdge,
       userAgent: navigator.userAgent
     });
-    
-    // Try using XMLHttpRequest for Edge Mobile
-    if (isMobile && isEdge) {
-      return new Promise((resolve) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open('GET', getApiUrl('status'), true);
-        xhr.setRequestHeader('Accept', 'application/json');
-        
-        xhr.onload = function() {
-          if (xhr.status === 200) {
-            const data = JSON.parse(xhr.responseText);
-            console.log('XHR response:', data);
-            resolve({
-              status: data.status,
-              secure: data.secure,
-              error: null
-            });
-          } else {
-            resolve({
-              status: 'offline',
-              secure: false,
-              error: `HTTP ${xhr.status}`
-            });
-          }
-        };
-        
-        xhr.onerror = function() {
-          console.error('XHR failed:', xhr.statusText);
-          resolve({
-            status: 'offline',
-            secure: false,
-            error: xhr.statusText
-          });
-        };
-        
-        xhr.send();
-      });
-    }
 
-    // Regular fetch for other browsers
-    const response = await fetch(getApiUrl('status'), {
+    const url = getApiUrl('status');
+    console.log('API URL:', url);
+
+    // Create AbortController for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
+    const response = await fetch(url, {
       method: 'GET',
+      keepalive: true,
+      credentials: 'omit',
+      mode: 'cors',
       headers: {
-        'Accept': 'application/json'
-      }
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      signal: controller.signal
     });
 
+    clearTimeout(timeoutId);
+
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
 
     const data = await response.json();
-    console.log('Fetch response:', data);
+    console.log('Response data:', data);
 
     return {
       status: data.status,
@@ -70,10 +45,12 @@ export const checkServerConnection = async () => {
       error: null
     };
   } catch (error) {
-    console.error('Connection check failed:', {
+    console.error('Connection check details:', {
       isMobile,
       isEdge,
       error: error.toString(),
+      type: error.name,
+      message: error.message,
       url: getApiUrl('status')
     });
 

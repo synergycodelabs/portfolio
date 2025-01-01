@@ -26,18 +26,26 @@ app.use(helmet({
 }));
 
 // Environment-specific CORS configuration
-app.use(cors({
-    origin: environment.ALLOWED_ORIGINS,
+// In server/app.js
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    res.header('Access-Control-Max-Age', '86400'); // 24 hours
+    next();
+  });
+  
+  app.use(cors({
+    origin: '*',
     methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: [
-      'Content-Type', 
-      'Authorization', 
-      'Accept',
-      'Cache-Control',
-      'Pragma'
-    ],
-    credentials: true
-}));
+    allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept'],
+    optionsSuccessStatus: 204
+  }));
+  
+  // Handle OPTIONS preflight
+  app.options('*', (req, res) => {
+    res.sendStatus(204);
+  });
 
 // Add a specific mobile check endpoint
 app.get('/api/mobile-status', (req, res) => {
