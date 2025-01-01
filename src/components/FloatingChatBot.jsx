@@ -149,9 +149,10 @@ const FloatingChatBotNew = ({ theme = 'dark' }) => {
       <div className={`fixed ${isNearResume ? 'bottom-32' : 'bottom-20'} right-4 z-50 transition-all duration-300`}>
 {/* Floating Button */}
 {!isOpen && (
-  <div style={{ position: 'fixed', bottom: '20%', zIndex: 9999 }} 
-       className="-right-5 group hover:right-4 transition-all duration-300">
-    {/* Rest of the button code stays exactly the same */}
+  <div className={`fixed bottom-20 transition-all duration-300 z-[9999]
+    right-4 md:-right-5 md:hover:right-4`} // Different positioning for mobile vs desktop
+  >
+    {/* Ghost text message */}
     <div className="absolute right-full mr-3 top-1/2 -translate-y-1/2 
       opacity-0 group-hover:opacity-100 transition-all duration-300
       whitespace-nowrap pointer-events-none">
@@ -177,6 +178,7 @@ const FloatingChatBotNew = ({ theme = 'dark' }) => {
           className="w-full h-full rounded-full object-cover 
             hover:brightness-110 transition-all duration-300"
           onError={(e) => {
+            // Fallback to the MessageCircle icon if image fails to load
             e.target.style.display = 'none';
             e.target.parentElement.innerHTML = '<MessageCircle className="h-6 w-6 text-white" />';
           }}
