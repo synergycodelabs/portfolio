@@ -149,17 +149,15 @@ const FloatingChatBotNew = ({ theme = 'dark' }) => {
       <div className={`fixed ${isNearResume ? 'bottom-32' : 'bottom-20'} right-4 z-50 transition-all duration-300`}>
 {/* Floating Button */}
 {!isOpen && (
-  <div className={`fixed bottom-20 transition-all duration-300 z-[9999]
-    right-4 md:-right-5 md:hover:right-4`} // Different positioning for mobile vs desktop
-  >
+  <div className="fixed bottom-20 -right-5 group hover:right-4 transition-all duration-300">
     {/* Ghost text message */}
     <div className="absolute right-full mr-3 top-1/2 -translate-y-1/2 
       opacity-0 group-hover:opacity-100 transition-all duration-300
       whitespace-nowrap pointer-events-none">
-      <span className={`text-sm font-bold ${
+      <span className={`text-sm font-medium ${
         theme === 'dark' 
-          ? 'text-transparent [-webkit-text-stroke:1px_white]'
-          : 'text-transparent [-webkit-text-stroke:1px_black]'
+          ? 'text-white' 
+          : 'text-blue-600'
       }`}>
         Let's chat!
       </span>
@@ -172,17 +170,17 @@ const FloatingChatBotNew = ({ theme = 'dark' }) => {
       variant="ghost"
     >
       <div className="w-9 h-9 md:w-10 md:h-10">
-      <img 
-  src={import.meta.env.PROD ? '/portfolio/ai-assistant-active.png' : '/ai-assistant-active.png'}
-  alt="AI Assistant"
-  className="w-full h-full rounded-full object-cover 
-    hover:brightness-110 transition-all duration-300"
-  onError={(e) => {
-    // Fallback to the MessageCircle icon if image fails to load
-    e.target.style.display = 'none';
-    e.target.parentElement.innerHTML = '<MessageCircle className="h-6 w-6 text-white" />';
-  }}
-/>
+        <img 
+          src={import.meta.env.PROD ? '/portfolio/ai-assistant-active.png' : '/ai-assistant-active.png'}
+          alt="AI Assistant"
+          className="w-full h-full rounded-full object-cover 
+            hover:brightness-110 transition-all duration-300"
+          onError={(e) => {
+            // Fallback to the MessageCircle icon if image fails to load
+            e.target.style.display = 'none';
+            e.target.parentElement.innerHTML = '<MessageCircle className="h-6 w-6 text-white" />';
+          }}
+        />
       </div>
     </Button>
   </div>
