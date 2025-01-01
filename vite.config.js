@@ -16,10 +16,10 @@ export default defineConfig({
     open: true,
     proxy: {
       '/api': {
-        target: process.env.NODE_ENV === 'development' ? 'http://localhost:3003' : 'https://api.synergycodelabs.com',
+        target: 'http://localhost:3002',
         changeOrigin: true,
         secure: false,
-        rewrite: (path) => path.replace(/^\/api/, ''),
+        rewrite: (path) => path.replace(/^\/api/, '/api'),
         configure: (proxy, _options) => {
           proxy.on('error', (err, _req, _res) => {
             console.log('proxy error', err);
