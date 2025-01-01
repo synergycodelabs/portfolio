@@ -30,33 +30,31 @@ app.head('/api/status', (req, res) => {
   res.status(200).end();
 });
 
-// Unified CORS configuration
+// Unified CORS configuration for all mobile browsers
 app.use((req, res, next) => {
-  // Allow any options requests
-  if (req.method === 'OPTIONS') {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET, HEAD, POST, OPTIONS');
-    res.header('Access-Control-Allow-Headers', '*');
-    res.header('Access-Control-Max-Age', '86400');
-    return res.status(204).end();
-  }
+    const userAgent = req.headers['user-agent'];
+    const isMobile = /iPhone|iPad|iPod|Android|Windows Phone|IEMobile/i.test(userAgent);
+    
+    if (isMobile) {
+      // More permissive CORS for all mobile browsers
+      res.header('Access-Control-Allow-Origin', '*');
+      res.header('Access-Control-Allow-Methods', 'GET, HEAD, POST, OPTIONS');
+      res.header('Access-Control-Allow-Headers', '*');
+      res.header('Access-Control-Max-Age', '86400');
+    } else {
+      // Standard CORS for desktop
+      res.header('Access-Control-Allow-Origin', environment.ALLOWED_ORIGINS);
+      res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+      res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
+    }
   
-  // Check if it's a mobile Edge request
-  const userAgent = req.headers['user-agent'];
-  const isEdge = /Edg/i.test(userAgent);
-  
-  if (isEdge) {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET, HEAD, POST, OPTIONS');
-    res.header('Access-Control-Allow-Headers', '*');
-  } else {
-    res.header('Access-Control-Allow-Origin', environment.ALLOWED_ORIGINS);
-    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
-  }
-  
-  next();
-});
+    // Handle preflight
+    if (req.method === 'OPTIONS') {
+      return res.status(204).end();
+    }
+    
+    next();
+  });
 
 // Body parser
 app.use(express.json());
