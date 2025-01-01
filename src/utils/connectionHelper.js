@@ -3,18 +3,21 @@ import { getApiUrl } from '@/config/api';
 export const checkServerConnection = async () => {
   try {
     console.log('Checking server connection...');
-    console.log('API URL:', getApiUrl('status'));
-    
-    const response = await fetch(getApiUrl('status'));
+    const url = getApiUrl('status');
+    console.log('API URL:', url);
+    console.log('Origin:', window.location.origin);
+
+    const response = await fetch(url);
     console.log('Response status:', response.status);
-    
+    console.log('Response headers:', Object.fromEntries([...response.headers]));
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
+
     const data = await response.json();
     console.log('Server response:', data);
-    
+
     return {
       status: data.status,
       secure: data.secure,
@@ -25,9 +28,11 @@ export const checkServerConnection = async () => {
     console.error('Full error details:', {
       message: error.message,
       stack: error.stack,
-      type: error.name
+      type: error.name,
+      url: getApiUrl('status'),
+      origin: window.location.origin
     });
-    
+
     return {
       status: 'offline',
       secure: false,

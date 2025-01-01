@@ -1,18 +1,26 @@
+// src/config/api.js
+const getBaseUrl = () => {
+  if (import.meta.env.PROD) {
+    // Force HTTPS in production
+    return 'https://api.synergycodelabs.com';
+  }
+  // Use HTTP for local development
+  return 'http://localhost:3002';
+};
+
 export const getApiUrl = (endpoint) => {
-  const baseUrl = import.meta.env.PROD
-    ? 'https://api.synergycodelabs.com'
-    : 'http://localhost:3002';
+  const baseUrl = getBaseUrl();
   const endpoints = {
     status: '/api/status',
     chat: '/api/chat'
   };
-  return `${baseUrl}${endpoints[endpoint]}`;
+  const url = `${baseUrl}${endpoints[endpoint]}`;
+  console.log('API URL:', url); // Add logging to help debug
+  return url;
 };
 
 export default {
-  baseUrl: import.meta.env.PROD
-    ? 'https://api.synergycodelabs.com'
-    : 'http://localhost:3002',
+  baseUrl: getBaseUrl(),
   endpoints: {
     status: '/api/status',
     chat: '/api/chat'

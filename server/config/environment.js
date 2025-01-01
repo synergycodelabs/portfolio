@@ -16,13 +16,14 @@ import path from 'path';
   
       // CORS settings
       ALLOWED_ORIGINS: process.env.NODE_ENV === 'production'
-          ? [
-              'https://synergycodelabs.github.io',
-              'https://angel.synergycodelabs.com',
-              'http://localhost:3001',
-              'http://localhost:3003'
+        ? [
+            'https://synergycodelabs.github.io',
+            'https://www.synergycodelabs.github.io',
+            'https://angel.synergycodelabs.com',
+            'http://localhost:3001',
+            'http://localhost:3003'
             ]
-          : ['http://localhost:3001', 'http://localhost:3003'],
+        : ['http://localhost:3001', 'http://localhost:3003'],
   
       // OpenAI configuration
       OPENAI_API_KEY: process.env.OPENAI_API_KEY,
