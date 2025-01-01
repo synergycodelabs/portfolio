@@ -1,7 +1,94 @@
 import { getApiUrl } from '@/config/api';
-// In src/utils/connectionHelper.js
+
 const isMobile = /iPhone|iPad|iPod|Android|Windows Phone|IEMobile/i.test(navigator.userAgent);
 const isEdge = /Edg/i.test(navigator.userAgent);
+
+const testFetchConfigs = async (url) => {
+  const configs = [
+    {
+      name: "Basic fetch",
+      config: {
+        method: 'GET'
+      }
+    },
+    {
+      name: "No-cors mode",
+      config: {
+        method: 'GET',
+        mode: 'no-cors'
+      }
+    },
+    {
+      name: "With credentials",
+      config: {
+        method: 'GET',
+        credentials: 'include',
+        mode: 'cors'
+      }
+    },
+    {
+      name: "Without credentials",
+      config: {
+        method: 'GET',
+        credentials: 'omit',
+        mode: 'cors'
+      }
+    },
+    {
+      name: "With headers",
+      config: {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      }
+    },
+    {
+      name: "With cache control",
+      config: {
+        method: 'GET',
+        cache: 'no-cache',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      }
+    }
+  ];
+
+  console.log('Starting fetch tests...');
+  
+  for (const {name, config} of configs) {
+    try {
+      console.log(`Testing ${name}...`);
+      console.log('Config:', config);
+      
+      const response = await fetch(url, config);
+      const status = response.status;
+      let data = null;
+      
+      try {
+        data = await response.json();
+      } catch (e) {
+        console.log(`${name} - Could not parse JSON:`, e.message);
+      }
+      
+      console.log(`${name} Results:`, {
+        success: response.ok,
+        status,
+        data,
+        headers: Object.fromEntries([...response.headers])
+      });
+    } catch (error) {
+      console.log(`${name} Failed:`, {
+        error: error.toString(),
+        type: error.name,
+        message: error.message
+      });
+    }
+  }
+};
 
 export const checkServerConnection = async () => {
   try {
@@ -12,45 +99,34 @@ export const checkServerConnection = async () => {
     });
 
     const url = getApiUrl('status');
-    console.log('API URL:', url);
+    console.log('Testing URL:', url);
 
-    // Create AbortController for timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+    // Run all fetch configurations
+    await testFetchConfigs(url);
 
+    // Try default configuration after testing
     const response = await fetch(url, {
       method: 'GET',
-      keepalive: true,
-      credentials: 'omit',
-      mode: 'cors',
       headers: {
-        'Accept': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest'
-      },
-      signal: controller.signal
+        'Accept': 'application/json'
+      }
     });
 
-    clearTimeout(timeoutId);
-
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const data = await response.json();
-    console.log('Response data:', data);
-
     return {
       status: data.status,
       secure: data.secure,
       error: null
     };
   } catch (error) {
-    console.error('Connection check details:', {
+    console.error('Final connection check failed:', {
       isMobile,
       isEdge,
       error: error.toString(),
-      type: error.name,
-      message: error.message,
       url: getApiUrl('status')
     });
 
