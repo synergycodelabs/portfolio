@@ -149,16 +149,16 @@ const FloatingChatBotNew = ({ theme = 'dark' }) => {
       <div className={`fixed ${isNearResume ? 'bottom-32' : 'bottom-20'} right-4 z-50 transition-all duration-300`}>
 {/* Floating Button */}
 {!isOpen && (
-  <div className="fixed bottom-20 right-4 md:-right-5 md:hover:right-4 transition-all duration-300 z-[9999]">
-    {/* Tooltip message - simplified version */}
+  <div className="fixed bottom-20 -right-5 group hover:right-4 transition-all duration-300 z-[9999]">
+    {/* Tooltip message */}
     <div className="absolute right-full mr-2 top-1/2 -translate-y-1/2 
-      hidden md:block bg-white dark:bg-gray-800 rounded-lg px-3 py-1 shadow-lg
+      bg-gray-800 dark:bg-gray-700 rounded-lg px-3 py-1.5 shadow-lg
       opacity-0 group-hover:opacity-100 transition-opacity duration-300
       whitespace-nowrap pointer-events-none">
-      <span className="text-sm text-gray-700 dark:text-gray-200">Let's chat!</span>
+      <span className="text-sm text-white">Let's chat!</span>
       {/* Arrow */}
       <div className="absolute top-1/2 right-0 -mt-2 
-        border-8 border-transparent border-l-white dark:border-l-gray-800"></div>
+        border-8 border-transparent border-l-gray-800 dark:border-l-gray-700"></div>
     </div>
     <Button
       onClick={() => setIsOpen(true)}
