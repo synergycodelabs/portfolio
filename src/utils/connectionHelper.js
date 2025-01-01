@@ -93,6 +93,7 @@ const testFetchConfigs = async (url) => {
 };
 
 // Check server connection
+// In connectionHelper.js
 export const checkServerConnection = async () => {
   try {
     console.log('Browser details:', {
@@ -103,27 +104,56 @@ export const checkServerConnection = async () => {
 
     const url = getApiUrl('status');
     
-    // Special handling for Edge mobile
+    // Try direct status check first
     if (isMobile && isEdge) {
-      const response = await fetch(url, {
-        method: 'GET',
-        mode: 'no-cors',
-        cache: 'no-cache',
-        headers: {
-          'Accept': 'application/json'
-        }
-      });
-      
-      // For no-cors, we can't read the response
-      // but if we get here without error, server is likely online
-      return {
-        status: 'online',
-        secure: true,
-        error: null
-      };
+      try {
+        // Direct XMLHttpRequest check
+        const response = await new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.timeout = 5000; // 5 second timeout
+          xhr.open('GET', url, true);
+          
+          xhr.onload = () => {
+            if (xhr.status === 200) {
+              resolve(xhr.responseText);
+            } else {
+              reject(new Error(`HTTP ${xhr.status}`));
+            }
+          };
+          
+          xhr.onerror = () => reject(new Error('XHR failed'));
+          xhr.ontimeout = () => reject(new Error('XHR timeout'));
+          
+          xhr.send();
+        });
+
+        const data = JSON.parse(response);
+        console.log('XHR succeeded:', data);
+        
+        return {
+          status: data.status || 'online',
+          secure: true,
+          error: null
+        };
+      } catch (xhrError) {
+        console.log('XHR failed, trying ping check:', xhrError);
+        
+        // If XHR fails, try a simple fetch to check connectivity
+        const pingResponse = await fetch(url, {
+          method: 'HEAD',
+          mode: 'no-cors'
+        });
+        
+        // If we get here without error, assume we're online
+        return {
+          status: 'online',
+          secure: true,
+          error: null
+        };
+      }
     }
 
-    // Normal fetch for other browsers
+    // Default fetch for non-Edge-mobile browsers
     const response = await fetch(url, {
       method: 'GET',
       headers: {
