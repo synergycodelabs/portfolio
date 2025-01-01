@@ -7,7 +7,17 @@ export const checkServerConnection = async () => {
     console.log('API URL:', url);
     console.log('Origin:', window.location.origin);
 
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      method: 'GET',
+      mode: 'cors',
+      credentials: 'include',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      cache: 'no-cache'
+    });
+
     console.log('Response status:', response.status);
     console.log('Response headers:', Object.fromEntries([...response.headers]));
 
@@ -24,10 +34,9 @@ export const checkServerConnection = async () => {
       error: null
     };
   } catch (error) {
-    console.error('Server connection check failed:', error);
-    console.error('Full error details:', {
+    console.error('Server connection check failed:', {
+      error: error.toString(),
       message: error.message,
-      stack: error.stack,
       type: error.name,
       url: getApiUrl('status'),
       origin: window.location.origin

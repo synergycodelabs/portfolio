@@ -28,12 +28,18 @@ app.use(helmet({
 // Environment-specific CORS configuration
 app.use(cors({
     origin: function(origin, callback) {
-        callback(null, true); // Allow all origins temporarily for testing
+        console.log('Request origin:', origin);
+        callback(null, true);
     },
     methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    credentials: true,
+    preflightContinue: false,
+    optionsSuccessStatus: 204
 }));
+
+// Add OPTIONS handling for preflight requests
+app.options('*', cors());
 
 // Body parser
 app.use(express.json());
