@@ -1,18 +1,31 @@
 // src/utils/connectionHelper.js
 import { getApiUrl } from '@/config/api';
 
-const getBrowserInfo = () => ({
-  isMobile: /iPhone|iPad|iPod|Android|Windows Phone|IEMobile/i.test(navigator.userAgent),
-  isEdge: /Edg/i.test(navigator.userAgent)
-});
+const debugFetch = async (url, options = {}) => {
+  console.log('Attempting fetch:', {
+    url,
+    options,
+    timestamp: new Date().toISOString()
+  });
 
-// Simplified mobile fetch with better error handling
-const safeFetch = async (url, options = {}) => {
   try {
+    // Test basic connectivity
+    const pingResponse = await fetch(url, {
+      method: 'HEAD',
+      mode: 'cors',
+      cache: 'no-cache'
+    });
+    
+    console.log('Ping response:', {
+      ok: pingResponse.ok,
+      status: pingResponse.status
+    });
+
+    // Actual request
     const response = await fetch(url, {
       ...options,
       mode: 'cors',
-      credentials: 'omit',
+      cache: 'no-cache',
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
@@ -20,27 +33,44 @@ const safeFetch = async (url, options = {}) => {
       }
     });
 
+    console.log('Fetch response:', {
+      ok: response.ok,
+      status: response.status,
+      headers: Object.fromEntries([...response.headers])
+    });
+
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
     }
 
-    return response.json();
+    const data = await response.json();
+    return data;
   } catch (error) {
-    console.error('Fetch failed:', { url, error });
+    console.error('Fetch error details:', {
+      name: error.name,
+      message: error.message,
+      url,
+      timestamp: new Date().toISOString()
+    });
     throw error;
   }
 };
 
 export const checkServerConnection = async () => {
-  const browserInfo = getBrowserInfo();
-  console.log('Browser details:', {
-    ...browserInfo,
+  const browserInfo = {
+    isMobile: /iPhone|iPad|iPod|Android|Windows Phone|IEMobile/i.test(navigator.userAgent),
+    isEdge: /Edg/i.test(navigator.userAgent),
     userAgent: navigator.userAgent
-  });
+  };
+  
+  console.log('Browser details:', browserInfo);
 
   try {
     const url = getApiUrl('status');
-    const data = await safeFetch(url);
+    console.log('Checking API:', url);
+
+    const data = await debugFetch(url);
+    console.log('Status response:', data);
     
     return {
       status: data.status || 'online',
@@ -59,7 +89,9 @@ export const checkServerConnection = async () => {
 export const sendChatMessage = async (message) => {
   try {
     const url = getApiUrl('chat');
-    const data = await safeFetch(url, {
+    console.log('Sending chat message:', { url, messageLength: message.length });
+
+    const data = await debugFetch(url, {
       method: 'POST',
       body: JSON.stringify({ message })
     });
