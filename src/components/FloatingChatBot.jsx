@@ -42,28 +42,39 @@ const SectionIndicator = ({ section, theme }) => {
  * Helper function to format chat responses with better structure
  */
 const formatResponse = (content) => {
+  // Remove any double asterisks that aren't rendering
+  const cleanContent = content.replace(/\*\*/g, '');
+
   // Check if response contains numbered items
-  if (content.includes('1.')) {
+  if (cleanContent.includes('1.')) {
     // Split into introduction and list items
-    const parts = content.split(/(?=\d+\.\s)/);
+    const parts = cleanContent.split(/(?=\d+\.\s)/);
     const intro = parts[0].trim();
     const items = parts.slice(1);
 
     return (
       <div className="flex flex-col gap-3">
-        {intro && <p className="text-sm">{intro}</p>}
+        {intro && <p className="text-sm mb-2">{intro}</p>}
         {items.length > 0 && (
           <div className="flex flex-col gap-3">
             {items.map((item, index) => {
-              const [number, ...textParts] = item.trim().split(' ');
-              const text = textParts.join(' ');
+              const [number, title, ...details] = item.trim().split(/:\s|-\s|:\n/);
               
               return (
-                <div key={index} className="flex gap-2 text-sm">
-                  <span className="flex-shrink-0 font-medium min-w-[1.5rem]">
-                    {number}
-                  </span>
-                  <span className="flex-1">{text}</span>
+                <div key={index} className="flex flex-col gap-1">
+                  <div className="flex gap-2 text-sm font-medium">
+                    <span className="flex-shrink-0 min-w-[1.5rem]">{number}</span>
+                    <span className="flex-1">{title}</span>
+                  </div>
+                  {details.length > 0 && (
+                    <div className="ml-8 text-sm">
+                      {details.join(' ').split('-').map((detail, i) => (
+                        <span key={i} className="block text-sm">
+                          {detail.trim()}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -73,8 +84,7 @@ const formatResponse = (content) => {
     );
   }
   
-  // For regular text responses
-  return <p className="text-sm whitespace-pre-wrap">{content}</p>;
+  return <p className="text-sm whitespace-pre-wrap">{cleanContent}</p>;
 };
 
 /**
