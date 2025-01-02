@@ -29,11 +29,12 @@ app.use(
 
 // CORS middleware
 app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
+    // Set a single origin
+    res.header('Access-Control-Allow-Origin', 'https://synergycodelabs.github.io');
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
-    res.header('Access-Control-Max-Age', '86400');
     
+    // Handle preflight
     if (req.method === 'OPTIONS') {
       return res.sendStatus(204);
     }
