@@ -260,7 +260,7 @@ const FloatingChatBot = ({ theme = 'dark' }) => {
             onMouseLeave={() => setIsHovered(false)}
           >
             {/* Add flexbox and center alignment */}
-            <div className={`absolute right-[10px] top-1/2 -translate-y-1/2
+            <div className={`absolute right-[10px] bottom-0
               transition-opacity duration-300 bg-gray-800 text-white 
               px-3 py-1.5 rounded-l-md whitespace-nowrap
               ${showTooltip || isHovered ? 'opacity-100' : 'opacity-0'}`}>
