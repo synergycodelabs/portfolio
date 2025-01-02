@@ -9,12 +9,29 @@ import { isBusinessHours } from '@/utils/businessHours';
 import ChatStatus from './ChatStatus';
 import ErrorBoundary from './common/ErrorBoundary';
 
+// Constants
 const RETRY_INTERVAL = 30000; // 30 seconds
 const MAX_RETRIES = 3;
 
 const WELCOME_MESSAGE = {
   role: 'assistant',
-  content: 'Hi! How can I help you today?'
+  content: "Hi! I'm here to help you learn more about Angel's professional experience and skills. What would you like to know?"
+};
+
+// Section indicator component for displaying context
+const SectionIndicator = ({ section, theme }) => {
+  if (!section) return null;
+  
+  return (
+    <div className={`text-xs ${
+      theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+    } mb-1 font-medium`}>
+      <span className="inline-flex items-center gap-1">
+        <span>📍</span>
+        <span>{section}</span>
+      </span>
+    </div>
+  );
 };
 
 const FloatingChatBotNew = ({ theme = 'dark' }) => {
@@ -81,11 +98,8 @@ const FloatingChatBotNew = ({ theme = 'dark' }) => {
     };
 
     checkStatus();
-
-    // Set up polling interval
     connectionCheckRef.current = setInterval(checkStatus, RETRY_INTERVAL);
 
-    // Cleanup function
     return () => {
       isSubscribed = false;
       if (connectionCheckRef.current) {
@@ -98,7 +112,7 @@ const FloatingChatBotNew = ({ theme = 'dark' }) => {
   useEffect(() => {
     const scrollTimer = setTimeout(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, 100); // Slight delay to ensure content is rendered
+    }, 100);
 
     return () => clearTimeout(scrollTimer);
   }, [messages]);
@@ -125,7 +139,8 @@ const FloatingChatBotNew = ({ theme = 'dark' }) => {
     if (result.success) {
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: result.response
+        content: result.response,
+        section: result.section // Store the section information
       }]);
     } else {
       setMessages(prev => [...prev, {
@@ -149,7 +164,7 @@ const FloatingChatBotNew = ({ theme = 'dark' }) => {
       <div className={`fixed ${isNearResume ? 'bottom-32' : 'bottom-20'} right-4 z-50 transition-all duration-300`}>
         {/* Floating Button */}
         {!isOpen && (
-          <div className="fixed bottom-28 group z-[9999]">  {/* Changed from bottom-20 to bottom-24 */}
+          <div className="fixed bottom-28 group z-[9999]">
             {/* Tooltip that appears on hover */}
             <div className="absolute right-[20px] 
               opacity-0 group-hover:opacity-100 transition-opacity duration-300
@@ -226,6 +241,10 @@ const FloatingChatBotNew = ({ theme = 'dark' }) => {
                       msg.role === 'user' ? 'ml-auto text-right' : 'mr-auto'
                     }`}
                   >
+                    {/* Add section indicator for assistant messages */}
+                    {msg.role === 'assistant' && msg.section && (
+                      <SectionIndicator section={msg.section} theme={theme} />
+                    )}
                     <div
                       className={`inline-block rounded-lg px-4 py-2 max-w-[80%] ${
                         msg.role === 'user'
