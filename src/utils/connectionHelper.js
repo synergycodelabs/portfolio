@@ -1,11 +1,20 @@
-// In connectionHelper.js (src/utils/connectionHelper.js)
+// src/utils/connectionHelper.js
+import { getApiUrl } from '@/config/api';
+
+// Helper function for browser detection
+const getBrowserInfo = () => {
+  const isMobile = /iPhone|iPad|iPod|Android|Windows Phone|IEMobile/i.test(navigator.userAgent);
+  const isEdge = /Edg/i.test(navigator.userAgent);
+  return { isMobile, isEdge };
+};
+
+// Helper for XHR requests
 const sendXHRRequest = async (url, options = {}) => {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
-    xhr.timeout = 10000; // 10 second timeout
+    xhr.timeout = 10000;
     xhr.open(options.method || 'GET', url, true);
     
-    // Set headers
     if (options.headers) {
       Object.entries(options.headers).forEach(([key, value]) => {
         xhr.setRequestHeader(key, value);
@@ -34,11 +43,8 @@ const sendXHRRequest = async (url, options = {}) => {
 
 export const checkServerConnection = async () => {
   try {
-    console.log('Browser details:', {
-      isMobile,
-      isEdge,
-      userAgent: navigator.userAgent
-    });
+    const { isMobile, isEdge } = getBrowserInfo();
+    console.log('Browser details:', { isMobile, isEdge, userAgent: navigator.userAgent });
 
     const url = getApiUrl('status');
     console.log('Checking status at:', url);
@@ -97,6 +103,7 @@ export const checkServerConnection = async () => {
 
 export const sendChatMessage = async (message) => {
   try {
+    const { isMobile, isEdge } = getBrowserInfo();
     const url = getApiUrl('chat');
     console.log('Sending chat message to:', url);
 
