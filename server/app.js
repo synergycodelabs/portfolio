@@ -1,6 +1,5 @@
   import express from 'express';
   import helmet from 'helmet';
-  import cors from 'cors';
   import path from 'path';
   import { fileURLToPath } from 'url';
   import environment from './config/environment.js';
