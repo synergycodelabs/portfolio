@@ -27,35 +27,18 @@ app.use(
   })
 );
 
-// In app.js, replace the current CORS configuration with:
+// CORS middleware
 app.use((req, res, next) => {
-    const userAgent = req.headers['user-agent'];
-    const isEdge = /Edg/i.test(userAgent);
-  
-    // Set CORS headers
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
+    res.header('Access-Control-Max-Age', '86400');
     
-    // Handle preflight
     if (req.method === 'OPTIONS') {
       return res.sendStatus(204);
     }
     next();
   });
-
-/**
- * Additional cors() usage – fallback approach. 
- * Setting origin: '*', but we mainly rely on the custom middleware above.
- */
-app.use(
-  cors({
-    origin: '*',
-    methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept'],
-    optionsSuccessStatus: 204,
-  })
-);
 
 // Add OPTIONS handling explicitly
 app.options('*', (req, res) => {
