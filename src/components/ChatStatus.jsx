@@ -6,18 +6,18 @@ const ChatStatus = ({ serverStatus, theme, displayMode = 'compact' }) => {
   // Only show status indicator in header, no text
   if (displayMode === 'compact') {
     if (serverStatus === 'checking') {
-      return <Loader2 className="h-4 w-4 md:h-5 md:w-5 text-yellow-500 animate-spin" />;
+      return <Loader2 className="h-5 w-5 md:h-6 md:w-6 text-yellow-500 animate-spin" />;
     }
     if (serverStatus === 'offline') {
-      return <WifiOff className="h-4 w-4 md:h-5 md:w-5 text-red-500" />;
+      return <WifiOff className="h-5 w-5 md:h-6 md:w-6 text-red-500" />;
     }
     if (serverStatus === 'online' && !isBusinessHours()) {
-      return <Clock className="h-4 w-4 md:h-5 md:w-5 text-orange-500" />;
+      return <Clock className="h-5 w-5 md:h-6 md:w-6 text-orange-500" />;
     }
     // When online during business hours, show AI assistant icon
     if (serverStatus === 'online' && isBusinessHours()) {
       return (
-        <div className="relative w-4 h-4 md:w-5 md:h-5">
+        <div className="relative h-5 w-5 md:h-6 md:w-6">
           <img 
             src={import.meta.env.PROD ? '/portfolio/ai-assistant-active.png' : '/ai-assistant-active.png'}
             alt="AI Assistant Online"
