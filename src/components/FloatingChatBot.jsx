@@ -85,7 +85,7 @@ const formatResponse = (content) => {
   );
 };
 
-const FloatingChatBotNew = ({ theme = 'dark' }) => {
+const FloatingChatBot = ({ theme = 'dark' }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [messages, setMessages] = useState([]);
@@ -98,6 +98,28 @@ const FloatingChatBotNew = ({ theme = 'dark' }) => {
   const connectionCheckRef = useRef(null);
   const [isNearResume, setIsNearResume] = useState(false);
   const [conversationContext] = useState(() => new ConversationContext());
+  const [isTyping, setIsTyping] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
+  const [hasInteracted, setHasInteracted] = useState(false);
+
+    // Add tooltip animation effect
+    useEffect(() => {
+      if (hasInteracted) return;
+  
+      const initialTimer = setTimeout(() => {
+        setShowTooltip(true);
+        setTimeout(() => setShowTooltip(false), 3000);
+        
+        const intervalTimer = setInterval(() => {
+          setShowTooltip(true);
+          setTimeout(() => setShowTooltip(false), 3000);
+        }, 600000); // 10 minutes
+  
+        return () => clearInterval(intervalTimer);
+      }, 5000); // Initial 5 second delay
+  
+      return () => clearTimeout(initialTimer);
+    }, [hasInteracted]);
 
   useEffect(() => {
     const checkResumeProximity = () => {
@@ -233,19 +255,23 @@ const FloatingChatBotNew = ({ theme = 'dark' }) => {
         {/* Floating Button */}
         {!isOpen && (
           <div className="fixed bottom-28 group z-[9999]">
-            <div className="absolute right-[20px] 
-              opacity-0 group-hover:opacity-100 transition-opacity duration-300
-              bg-gray-800 text-white px-3 py-1.5 rounded-l-md whitespace-nowrap">
+            <div className={`absolute right-[20px] 
+              transition-opacity duration-300 bg-gray-800 text-white 
+              px-3 py-1.5 rounded-l-md whitespace-nowrap
+              ${showTooltip || isHovered ? 'opacity-100' : 'opacity-0'}`}>
               <span className="text-sm">Let's chat</span>
             </div>
-            <div className="fixed right-[-35px]"> {/* Adjusted right positioning */}
+            <div className="fixed right-[-35px]">
               <Button
-                onClick={() => setIsOpen(true)}
+                onClick={() => {
+                  setIsOpen(true);
+                  setHasInteracted(true);
+                }}
                 className="shadow-lg hover:shadow-xl transition-all duration-300 
                   flex items-center justify-center p-0"
                 variant="ghost"
               >
-                <div className="w-10 h-14 md:w-10 md:h-16"> {/* Taller but not wider */}
+                <div className="w-10 h-14 md:w-10 md:h-16">
                   <img 
                     src={import.meta.env.PROD ? '/portfolio/ai-assistant-active.png' : '/ai-assistant-active.png'}
                     alt="AI Assistant Online"
@@ -400,4 +426,4 @@ const FloatingChatBotNew = ({ theme = 'dark' }) => {
   );
 };
 
-export default FloatingChatBotNew;
+export default FloatingChatBot;
