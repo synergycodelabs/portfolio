@@ -255,12 +255,12 @@ const FloatingChatBot = ({ theme = 'dark' }) => {
       <div className={`fixed ${isNearResume ? 'bottom-32' : 'bottom-20'} right-4 z-50 transition-all duration-300`}>
         {/* Floating Button */}
         {!isOpen && (
-          <div className="fixed bottom-28 right-[-20px] group z-[9999]"
+          <div className="fixed bottom-28 right-[-30px] group z-[9999]"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
           >
             {/* Tooltip */}
-            <div className={`absolute left-[-120%] top-1/2 transform -translate-y-1/2 
+            <div className={`absolute left-[-130%] top-1/2 transform -translate-y-1/2 
               transition-opacity duration-300 bg-gray-800 text-white 
               px-3 py-1.5 rounded-md whitespace-nowrap
               ${showTooltip || isHovered ? 'opacity-100' : 'opacity-0'}`}>
