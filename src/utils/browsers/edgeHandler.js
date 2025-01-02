@@ -1,13 +1,18 @@
 // src/utils/browsers/edgeHandler.js
 import { getApiUrl } from '../../config/api';
 
+const isDevelopment = window.location.hostname === 'localhost';
+
 export const edgeHandler = {
   checkStatus: async () => {
     try {
       const response = await fetch(getApiUrl('status'), {
         mode: 'cors',
-        credentials: 'omit',
-        headers: { 'Accept': 'application/json' }
+        credentials: isDevelopment ? 'include' : 'omit',
+        headers: {
+          'Accept': 'application/json',
+          'Origin': window.location.origin
+        }
       });
       
       const data = await response.json();
@@ -23,10 +28,11 @@ export const edgeHandler = {
       const response = await fetch(getApiUrl('chat'), {
         method: 'POST',
         mode: 'cors',
-        credentials: 'omit',
+        credentials: isDevelopment ? 'include' : 'omit',
         headers: {
           'Accept': 'application/json',
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Origin': window.location.origin
         },
         body: JSON.stringify({ message })
       });

@@ -22,7 +22,7 @@ export async function postChat(req, res) {
     const { context, sources } = getRelevantContext(embeddingResponse.data[0].embedding);
 
     const chatResponse = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'ft:gpt-4o-mini-2024-07-18:aplusg:portfolio-bot-v1:AjLmxhRS',
       messages: [
         {
           role: 'system',
@@ -32,6 +32,7 @@ Context from sections [${sources.join(', ')}]:
 ${context}
 
 Guidelines:
+- Greetings are allowed when customer greets or say something like Hi or Hello
 - Base your responses only on the above context from Angel's portfolio
 - When appropriate, mention which section contains the information you're referencing
 - Keep responses concise and factual
