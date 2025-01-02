@@ -167,11 +167,12 @@ const FloatingChatBotNew = ({ theme = 'dark' }) => {
                 <div className="w-9 h-9 md:w-10 md:h-10">
                   <img 
                     src={import.meta.env.PROD ? '/portfolio/ai-assistant-active.png' : '/ai-assistant-active.png'}
-                    alt="AI Assistant"
+                    alt="AI Assistant Online"
                     className="w-full h-full rounded-full object-cover"
                     onError={(e) => {
                       e.target.style.display = 'none';
-                      e.target.parentElement.innerHTML = '<MessageCircle className="h-6 w-6 text-white" />';
+                      e.target.parentElement.innerHTML = '👋';
+                      e.target.parentElement.classList.add('text-2xl');
                     }}
                   />
                 </div>
