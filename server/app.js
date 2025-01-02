@@ -26,17 +26,7 @@
       crossOriginResourcePolicy: { policy: 'cross-origin' },
     })
   );
-  
-  // Single CORS configuration
-  const corsConfig = {
-    origin: 'https://synergycodelabs.github.io',
-    methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-    optionsSuccessStatus: 204
-  };
-  
-  app.use(cors(corsConfig));
-  
+ 
   // Body parser
   app.use(express.json());
   
