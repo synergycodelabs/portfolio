@@ -1,5 +1,6 @@
+// src/components/FloatingChatBot.jsx
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Loader2 } from 'lucide-react';
+import { MessageCircle, X, Send, Loader2, Minimize2, Maximize2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,9 +10,6 @@ import { isBusinessHours } from '@/utils/businessHours';
 import ChatStatus from './ChatStatus';
 import ErrorBoundary from './common/ErrorBoundary';
 
-/**
- * Constants for chat operation
- */
 const RETRY_INTERVAL = 30000; // 30 seconds
 const MAX_RETRIES = 3;
 
@@ -20,9 +18,6 @@ const WELCOME_MESSAGE = {
   content: "Hi! I'm here to help you learn more about Angel's professional experience and skills. What would you like to know?"
 };
 
-/**
- * Component to display the current section being discussed
- */
 const SectionIndicator = ({ section, theme }) => {
   if (!section) return null;
   
@@ -38,11 +33,7 @@ const SectionIndicator = ({ section, theme }) => {
   );
 };
 
-/**
- * Helper function to format chat responses with better structure
- */
 const formatResponse = (content) => {
-  // First check if it's a list response
   if (content.includes('1.')) {
     const parts = content.split(/(?=\d+\.\s)/);
     const intro = parts[0].trim();
@@ -50,7 +41,6 @@ const formatResponse = (content) => {
 
     return (
       <div className="flex flex-col gap-3 w-full">
-        {/* Ensure intro is full width and left-aligned */}
         {intro && (
           <div className="text-sm w-full text-left mb-2">
             {intro}
@@ -59,7 +49,6 @@ const formatResponse = (content) => {
         {items.length > 0 && (
           <div className="flex flex-col gap-3 w-full">
             {items.map((item, index) => {
-              // Split into number and content
               const [number, ...contentParts] = item.trim().split(/\s(.+)/);
               const content = contentParts.join(' ');
               
@@ -80,7 +69,6 @@ const formatResponse = (content) => {
     );
   }
   
-  // For non-list responses, ensure left alignment
   return (
     <div className="text-sm w-full text-left whitespace-pre-wrap">
       {content}
@@ -88,11 +76,9 @@ const formatResponse = (content) => {
   );
 };
 
-/**
- * Main chat component with floating UI and section-aware responses
- */
 const FloatingChatBotNew = ({ theme = 'dark' }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -101,8 +87,6 @@ const FloatingChatBotNew = ({ theme = 'dark' }) => {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const messagesEndRef = useRef(null);
   const connectionCheckRef = useRef(null);
-
-  // Check if we're near the resume section
   const [isNearResume, setIsNearResume] = useState(false);
 
   useEffect(() => {
@@ -222,13 +206,11 @@ const FloatingChatBotNew = ({ theme = 'dark' }) => {
         {/* Floating Button */}
         {!isOpen && (
           <div className="fixed bottom-28 group z-[9999]">
-            {/* Tooltip that appears on hover */}
             <div className="absolute right-[20px] 
               opacity-0 group-hover:opacity-100 transition-opacity duration-300
               bg-gray-800 text-white px-3 py-1.5 rounded-l-md whitespace-nowrap">
               <span className="text-sm">Let's chat</span>
             </div>
-            {/* Icon container that stays half embedded */}
             <div className="fixed right-[-20px]">
               <Button
                 onClick={() => setIsOpen(true)}
@@ -255,7 +237,11 @@ const FloatingChatBotNew = ({ theme = 'dark' }) => {
         {/* Chat Window */}
         {isOpen && (
           <div
-            className={`w-80 md:w-96 h-[500px] rounded-lg shadow-xl flex flex-col ${
+            className={`${
+              isExpanded 
+                ? 'w-[32rem] md:w-[48rem] h-[36rem]' 
+                : 'w-80 md:w-96 h-[500px]'
+            } rounded-lg shadow-xl flex flex-col ${
               theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'
             } ${isTransitioning ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}
             transition-all duration-300 ease-in-out`}
@@ -265,6 +251,18 @@ const FloatingChatBotNew = ({ theme = 'dark' }) => {
               theme === 'dark' ? 'border-gray-700' : 'border-gray-200'
             }`}>
               <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className={`${theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100'} p-2`}
+                >
+                  {isExpanded ? (
+                    <Minimize2 className="h-4 w-4" />
+                  ) : (
+                    <Maximize2 className="h-4 w-4" />
+                  )}
+                </Button>
                 <h3 className="font-semibold">Chat Assistant</h3>
                 <ChatStatus
                   serverStatus={serverStatus}
@@ -295,15 +293,18 @@ const FloatingChatBotNew = ({ theme = 'dark' }) => {
                   <div
                     key={index}
                     className={`mb-4 ${
-                      msg.role === 'user' ? 'ml-auto text-right' : 'mr-auto'
+                      msg.role === 'user' ? 'ml-auto text-right' : 'w-full'
                     }`}
                   >
-                    {/* Add section indicator for assistant messages */}
                     {msg.role === 'assistant' && msg.section && (
                       <SectionIndicator section={msg.section} theme={theme} />
                     )}
                     <div
-                      className={`inline-block rounded-lg px-4 py-2 max-w-[80%] ${
+                      className={`${
+                        msg.role === 'user'
+                          ? 'inline-block ml-auto'
+                          : 'w-full'
+                      } rounded-lg px-4 py-2 ${
                         msg.role === 'user'
                           ? theme === 'dark'
                             ? 'bg-blue-600 text-white'
@@ -319,8 +320,8 @@ const FloatingChatBotNew = ({ theme = 'dark' }) => {
                 ))
               )}
               {isLoading && (
-                <div className="flex justify-start mb-4">
-                  <div className={`inline-block rounded-lg px-4 py-2 ${
+                <div className="flex justify-start mb-4 w-full">
+                  <div className={`rounded-lg px-4 py-2 ${
                     theme === 'dark' ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-900'
                   }`}>
                     <div className="flex items-center gap-2">
