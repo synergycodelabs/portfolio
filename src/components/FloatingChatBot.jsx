@@ -9,7 +9,9 @@ import { isBusinessHours } from '@/utils/businessHours';
 import ChatStatus from './ChatStatus';
 import ErrorBoundary from './common/ErrorBoundary';
 
-// Constants
+/**
+ * Constants for chat operation
+ */
 const RETRY_INTERVAL = 30000; // 30 seconds
 const MAX_RETRIES = 3;
 
@@ -18,7 +20,9 @@ const WELCOME_MESSAGE = {
   content: "Hi! I'm here to help you learn more about Angel's professional experience and skills. What would you like to know?"
 };
 
-// Section indicator component for displaying context
+/**
+ * Component to display the current section being discussed
+ */
 const SectionIndicator = ({ section, theme }) => {
   if (!section) return null;
   
@@ -34,6 +38,48 @@ const SectionIndicator = ({ section, theme }) => {
   );
 };
 
+/**
+ * Helper function to format chat responses with better structure
+ */
+const formatResponse = (content) => {
+  // Check if response contains numbered items
+  if (content.includes('1.')) {
+    // Split into introduction and list items
+    const parts = content.split(/(?=\d+\.\s)/);
+    const intro = parts[0].trim();
+    const items = parts.slice(1);
+
+    return (
+      <div className="flex flex-col gap-3">
+        {intro && <p className="text-sm">{intro}</p>}
+        {items.length > 0 && (
+          <div className="flex flex-col gap-3">
+            {items.map((item, index) => {
+              const [number, ...textParts] = item.trim().split(' ');
+              const text = textParts.join(' ');
+              
+              return (
+                <div key={index} className="flex gap-2 text-sm">
+                  <span className="flex-shrink-0 font-medium min-w-[1.5rem]">
+                    {number}
+                  </span>
+                  <span className="flex-1">{text}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  }
+  
+  // For regular text responses
+  return <p className="text-sm whitespace-pre-wrap">{content}</p>;
+};
+
+/**
+ * Main chat component with floating UI and section-aware responses
+ */
 const FloatingChatBotNew = ({ theme = 'dark' }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
@@ -64,7 +110,7 @@ const FloatingChatBotNew = ({ theme = 'dark' }) => {
     return () => window.removeEventListener('scroll', checkResumeProximity);
   }, []);
 
-  // Initialize welcome message when chat opens and server is online
+  // Initialize welcome message when chat opens
   useEffect(() => {
     if (isOpen && serverStatus === 'online' && messages.length === 0) {
       setMessages([WELCOME_MESSAGE]);
@@ -140,7 +186,7 @@ const FloatingChatBotNew = ({ theme = 'dark' }) => {
       setMessages(prev => [...prev, {
         role: 'assistant',
         content: result.response,
-        section: result.section // Store the section information
+        section: result.section
       }]);
     } else {
       setMessages(prev => [...prev, {
@@ -256,7 +302,7 @@ const FloatingChatBotNew = ({ theme = 'dark' }) => {
                           : 'bg-gray-100 text-gray-900'
                       }`}
                     >
-                      {msg.content}
+                      {msg.role === 'assistant' ? formatResponse(msg.content) : msg.content}
                     </div>
                   </div>
                 ))
