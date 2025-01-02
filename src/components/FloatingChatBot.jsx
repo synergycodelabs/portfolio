@@ -259,13 +259,13 @@ const FloatingChatBot = ({ theme = 'dark' }) => {
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
-          <div className={`absolute right-[35px] 
+          <div className={`absolute right-[10px] 
             transition-opacity duration-300 bg-gray-800 text-white 
             px-3 py-1.5 rounded-l-md whitespace-nowrap
             ${showTooltip || isHovered ? 'opacity-100' : 'opacity-0'}`}>
             <span className="text-sm">Let's chat</span>
           </div>
-            <div className="fixed right-[-10px]">
+            <div className="fixed right-[-30px]">
               <Button
                 onClick={() => {
                   setIsOpen(true);
