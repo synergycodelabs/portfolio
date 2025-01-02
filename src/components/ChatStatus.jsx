@@ -15,13 +15,12 @@ const ChatStatus = ({ serverStatus, theme, displayMode = 'compact' }) => {
           <WifiOff className={`h-10 w-10 md:h-12 md:w-12 mx-auto mb-4 ${
             theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
           }`} />
-          <p className="text-lg font-medium mb-2">Virtual Assistant Currently Unavailable</p>
-          <p className="text-sm text-gray-500">
-            I'm taking a short break to optimize my resources. In the meantime, 
-            please feel free to explore my portfolio and projects. You can also 
-            reach out via the contact form or LinkedIn.
+          <p className="text-lg font-medium mb-3">Assistant Currently Offline</p>
+          <p className="text-sm text-gray-500 mb-3">
+            I'm optimizing resources at the moment. Please explore my portfolio 
+            or reach out via LinkedIn for immediate connection.
           </p>
-          <p className="text-sm mt-4 text-gray-500">
+          <p className="text-sm text-gray-500">
             Regular hours: {formatBusinessHours().start} - {formatBusinessHours().end}, Mon-Fri
           </p>
         </div>
