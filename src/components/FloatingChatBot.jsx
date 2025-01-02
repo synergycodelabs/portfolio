@@ -275,7 +275,7 @@ const FloatingChatBot = ({ theme = 'dark' }) => {
                   flex items-center justify-center p-0"
                 variant="ghost"
               >
-                <div className="w-10 h-14 md:w-10 md:h-16">
+                <div className="w-10 h-20 md:w-10 md:h-16">
                   <img 
                     src={import.meta.env.PROD ? '/portfolio/ai-assistant-active.png' : '/ai-assistant-active.png'}
                     alt="AI Assistant Online"
