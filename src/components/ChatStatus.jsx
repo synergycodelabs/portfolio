@@ -8,27 +8,22 @@ const ChatStatus = ({ serverStatus, theme, displayMode = 'compact' }) => {
     if (serverStatus === 'checking') {
       return <Loader2 className="h-5 w-5 md:h-6 md:w-6 text-yellow-500 animate-spin" />;
     }
+
     if (serverStatus === 'offline') {
-      return <WifiOff className="h-5 w-5 md:h-6 md:w-6 text-red-500" />;
-    }
-    if (serverStatus === 'online' && !isBusinessHours()) {
-      return <Clock className="h-5 w-5 md:h-6 md:w-6 text-orange-500" />;
-    }
-    // When online during business hours, show AI assistant icon
-    if (serverStatus === 'online' && isBusinessHours()) {
       return (
-        <div className="relative h-5 w-5 md:h-6 md:w-6">
-          <img 
-            src={import.meta.env.PROD ? '/portfolio/ai-assistant-active.png' : '/ai-assistant-active.png'}
-            alt="AI Assistant Online"
-            className="w-full h-full rounded-full object-cover"
-            onError={(e) => {
-              e.target.style.display = 'none';
-              e.target.parentElement.classList.add(
-                theme === 'dark' ? 'bg-green-500' : 'bg-green-400'
-              );
-            }}
-          />
+        <div className="text-center py-8 px-4">
+          <WifiOff className={`h-10 w-10 md:h-12 md:w-12 mx-auto mb-4 ${
+            theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+          }`} />
+          <p className="text-lg font-medium mb-2">Virtual Assistant Currently Unavailable</p>
+          <p className="text-sm text-gray-500">
+            I'm taking a short break to optimize my resources. In the meantime, 
+            please feel free to explore my portfolio and projects. You can also 
+            reach out via the contact form or LinkedIn.
+          </p>
+          <p className="text-sm mt-4 text-gray-500">
+            Regular hours: {formatBusinessHours().start} - {formatBusinessHours().end}, Mon-Fri
+          </p>
         </div>
       );
     }
