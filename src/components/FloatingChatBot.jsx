@@ -94,6 +94,7 @@ const FloatingChatBot = ({ theme = 'dark' }) => {
   const [serverStatus, setServerStatus] = useState('checking');
   const [retryCount, setRetryCount] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const messagesEndRef = useRef(null);
   const connectionCheckRef = useRef(null);
   const [isNearResume, setIsNearResume] = useState(false);
@@ -254,13 +255,16 @@ const FloatingChatBot = ({ theme = 'dark' }) => {
       <div className={`fixed ${isNearResume ? 'bottom-32' : 'bottom-20'} right-4 z-50 transition-all duration-300`}>
         {/* Floating Button */}
         {!isOpen && (
-          <div className="fixed bottom-28 group z-[9999]">
-            <div className={`absolute right-[20px] 
-              transition-opacity duration-300 bg-gray-800 text-white 
-              px-3 py-1.5 rounded-l-md whitespace-nowrap
-              ${showTooltip || isHovered ? 'opacity-100' : 'opacity-0'}`}>
-              <span className="text-sm">Let's chat</span>
-            </div>
+        <div className="fixed bottom-28 group z-[9999]"
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
+          <div className={`absolute right-[20px] 
+            transition-opacity duration-300 bg-gray-800 text-white 
+            px-3 py-1.5 rounded-l-md whitespace-nowrap
+            ${showTooltip || isHovered ? 'opacity-100' : 'opacity-0'}`}>
+            <span className="text-sm">Let's chat</span>
+          </div>
             <div className="fixed right-[-35px]">
               <Button
                 onClick={() => {
