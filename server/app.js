@@ -28,18 +28,21 @@ app.use(
 );
 
 // CORS middleware
-app.use((req, res, next) => {
-    // Set a single origin
-    res.header('Access-Control-Allow-Origin', 'https://synergycodelabs.github.io');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
-    
+const corsMiddleware = (req, res, next) => {
+    // Set single origin header
+    res.setHeader('Access-Control-Allow-Origin', 'https://synergycodelabs.github.io');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
+  
     // Handle preflight
     if (req.method === 'OPTIONS') {
       return res.sendStatus(204);
     }
     next();
-  });
+  };
+  
+  // Use the middleware
+  app.use(corsMiddleware);
 
 // Add OPTIONS handling explicitly
 app.options('*', (req, res) => {
