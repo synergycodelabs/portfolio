@@ -42,39 +42,35 @@ const SectionIndicator = ({ section, theme }) => {
  * Helper function to format chat responses with better structure
  */
 const formatResponse = (content) => {
-  // Remove any double asterisks that aren't rendering
-  const cleanContent = content.replace(/\*\*/g, '');
-
-  // Check if response contains numbered items
-  if (cleanContent.includes('1.')) {
-    // Split into introduction and list items
-    const parts = cleanContent.split(/(?=\d+\.\s)/);
+  // First check if it's a list response
+  if (content.includes('1.')) {
+    const parts = content.split(/(?=\d+\.\s)/);
     const intro = parts[0].trim();
     const items = parts.slice(1);
 
     return (
-      <div className="flex flex-col gap-3">
-        {intro && <p className="text-sm mb-2">{intro}</p>}
+      <div className="flex flex-col gap-3 w-full">
+        {/* Ensure intro is full width and left-aligned */}
+        {intro && (
+          <div className="text-sm w-full text-left mb-2">
+            {intro}
+          </div>
+        )}
         {items.length > 0 && (
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3 w-full">
             {items.map((item, index) => {
-              const [number, title, ...details] = item.trim().split(/:\s|-\s|:\n/);
+              // Split into number and content
+              const [number, ...contentParts] = item.trim().split(/\s(.+)/);
+              const content = contentParts.join(' ');
               
               return (
-                <div key={index} className="flex flex-col gap-1">
-                  <div className="flex gap-2 text-sm font-medium">
-                    <span className="flex-shrink-0 min-w-[1.5rem]">{number}</span>
-                    <span className="flex-1">{title}</span>
-                  </div>
-                  {details.length > 0 && (
-                    <div className="ml-8 text-sm">
-                      {details.join(' ').split('-').map((detail, i) => (
-                        <span key={i} className="block text-sm">
-                          {detail.trim()}
-                        </span>
-                      ))}
-                    </div>
-                  )}
+                <div key={index} className="flex gap-2 text-sm w-full">
+                  <span className="flex-shrink-0 min-w-[1.5rem] text-left">
+                    {number}
+                  </span>
+                  <span className="flex-1 text-left">
+                    {content}
+                  </span>
                 </div>
               );
             })}
@@ -84,7 +80,12 @@ const formatResponse = (content) => {
     );
   }
   
-  return <p className="text-sm whitespace-pre-wrap">{cleanContent}</p>;
+  // For non-list responses, ensure left alignment
+  return (
+    <div className="text-sm w-full text-left whitespace-pre-wrap">
+      {content}
+    </div>
+  );
 };
 
 /**
