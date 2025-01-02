@@ -265,7 +265,7 @@ const FloatingChatBot = ({ theme = 'dark' }) => {
             ${showTooltip || isHovered ? 'opacity-100' : 'opacity-0'}`}>
             <span className="text-sm">Let's chat</span>
           </div>
-            <div className="fixed right-[-35px]">
+            <div className="fixed right-[-30px]">
               <Button
                 onClick={() => {
                   setIsOpen(true);
