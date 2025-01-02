@@ -238,18 +238,18 @@ const FloatingChatBotNew = ({ theme = 'dark' }) => {
               bg-gray-800 text-white px-3 py-1.5 rounded-l-md whitespace-nowrap">
               <span className="text-sm">Let's chat</span>
             </div>
-            <div className="fixed right-[-20px]">
+            <div className="fixed right-[-35px]"> {/* Adjusted right positioning */}
               <Button
                 onClick={() => setIsOpen(true)}
                 className="shadow-lg hover:shadow-xl transition-all duration-300 
                   flex items-center justify-center p-0"
                 variant="ghost"
               >
-                <div className="w-9 h-9 md:w-10 md:h-10">
+                <div className="w-10 h-14 md:w-10 md:h-16"> {/* Taller but not wider */}
                   <img 
                     src={import.meta.env.PROD ? '/portfolio/ai-assistant-active.png' : '/ai-assistant-active.png'}
                     alt="AI Assistant Online"
-                    className="w-full h-full rounded-full object-cover"
+                    className="w-full h-full object-cover"
                     onError={(e) => {
                       e.target.style.display = 'none';
                       e.target.parentElement.innerHTML = '👋';
