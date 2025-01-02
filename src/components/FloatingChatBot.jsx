@@ -255,41 +255,41 @@ const FloatingChatBot = ({ theme = 'dark' }) => {
       <div className={`fixed ${isNearResume ? 'bottom-32' : 'bottom-20'} right-4 z-50 transition-all duration-300`}>
         {/* Floating Button */}
         {!isOpen && (
-          <div className="fixed bottom-28 group z-[9999]"
+          <div className="fixed bottom-28 right-[-20px] group z-[9999]"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
           >
-            {/* Add flexbox and center alignment */}
-            <div className={`absolute right-[10px] bottom-0
+            {/* Tooltip */}
+            <div className={`absolute left-[-120%] top-1/2 transform -translate-y-1/2 
               transition-opacity duration-300 bg-gray-800 text-white 
-              px-3 py-1.5 rounded-l-md whitespace-nowrap
+              px-3 py-1.5 rounded-md whitespace-nowrap
               ${showTooltip || isHovered ? 'opacity-100' : 'opacity-0'}`}>
               <span className="text-sm">Let's chat</span>
             </div>
-            <div className="fixed right-[-30px]">
-              <Button
-                onClick={() => {
-                  setIsOpen(true);
-                  setHasInteracted(true);
-                }}
-                className="shadow-lg hover:shadow-xl transition-all duration-300 
-                  flex items-center justify-center p-0"
-                variant="ghost"
-              >
-                <div className="w-10 h-20 md:w-10 md:h-16">
-                  <img 
-                    src={import.meta.env.PROD ? '/portfolio/ai-assistant-active.png' : '/ai-assistant-active.png'}
-                    alt="AI Assistant Online"
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                      e.target.parentElement.innerHTML = '👋';
-                      e.target.parentElement.classList.add('text-2xl');
-                    }}
-                  />
-                </div>
-              </Button>
-            </div>
+
+            {/* Icon/Button */}
+            <Button
+              onClick={() => {
+                setIsOpen(true);
+                setHasInteracted(true);
+              }}
+              className="shadow-lg hover:shadow-xl transition-all duration-300 
+                flex items-center justify-center p-0"
+              variant="ghost"
+            >
+              <div className="w-10 h-20 md:w-10 md:h-16">
+                <img 
+                  src={import.meta.env.PROD ? '/portfolio/ai-assistant-active.png' : '/ai-assistant-active.png'}
+                  alt="AI Assistant Online"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.parentElement.innerHTML = '👋';
+                    e.target.parentElement.classList.add('text-2xl');
+                  }}
+                />
+              </div>
+            </Button>
           </div>
         )}
         {/* Chat Window */}
