@@ -260,7 +260,7 @@ const FloatingChatBot = ({ theme = 'dark' }) => {
             onMouseLeave={() => setIsHovered(false)}
           >
             {/* Tooltip */}
-            <div className={`absolute left-[-160%] top-1/2 transform -translate-y-1/2 
+            <div className={`absolute left-[-200%] top-1/2 transform -translate-y-1/2 
               transition-opacity duration-300 bg-gray-800 text-white 
               px-3 py-1.5 rounded-md whitespace-nowrap
               ${showTooltip || isHovered ? 'opacity-100' : 'opacity-0'}`}>
