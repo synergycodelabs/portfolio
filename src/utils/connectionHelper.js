@@ -22,7 +22,8 @@ export const checkServerConnection = async () => {
   return handler.checkStatus();
 };
 
-export const sendChatMessage = async (message) => {
+export const sendChatMessage = async (message, context = []) => {
   const handler = getBrowserHandler();
-  return handler.sendMessage(message);
+  // Include context in the message payload
+  return handler.sendMessage(message, { context: context.slice(-3) });
 };

@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { checkServerConnection, sendChatMessage } from '@/utils/connectionHelper';
 import { isBusinessHours } from '@/utils/businessHours';
+import { ConversationContext } from '@/utils/chatContext';
 import ChatStatus from './ChatStatus';
 import ErrorBoundary from './common/ErrorBoundary';
 
@@ -96,6 +97,7 @@ const FloatingChatBotNew = ({ theme = 'dark' }) => {
   const messagesEndRef = useRef(null);
   const connectionCheckRef = useRef(null);
   const [isNearResume, setIsNearResume] = useState(false);
+  const [conversationContext] = useState(() => new ConversationContext());
 
   useEffect(() => {
     const checkResumeProximity = () => {
@@ -183,9 +185,19 @@ const FloatingChatBotNew = ({ theme = 'dark' }) => {
     setInput('');
     setIsLoading(true);
 
-    const result = await sendChatMessage(input.trim());
+    const result = await sendChatMessage(
+      input.trim(), 
+      conversationContext.getContext()
+    );
 
     if (result.success) {
+      // Store interaction in context
+      conversationContext.addMessage(
+        input.trim(),
+        result.response,
+        result.section
+      );
+
       setMessages(prev => [...prev, {
         role: 'assistant',
         content: result.response,
@@ -200,6 +212,13 @@ const FloatingChatBotNew = ({ theme = 'dark' }) => {
 
     setIsLoading(false);
   };
+
+  // Clear context when chat is closed
+  useEffect(() => {
+    if (!isOpen) {
+      conversationContext.clear();
+    }
+  }, [isOpen]);
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
