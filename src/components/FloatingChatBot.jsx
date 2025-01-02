@@ -230,8 +230,6 @@ const FloatingChatBotNew = ({ theme = 'dark' }) => {
   return (
     <ErrorBoundary>
       <div className={`fixed ${isNearResume ? 'bottom-32' : 'bottom-20'} right-4 z-50 transition-all duration-300`}>
-      // In FloatingChatBot.jsx, find the Floating Button section:
-
         {/* Floating Button */}
         {!isOpen && (
           <div className="fixed bottom-28 group z-[9999]">
@@ -247,12 +245,11 @@ const FloatingChatBotNew = ({ theme = 'dark' }) => {
                   flex items-center justify-center p-0"
                 variant="ghost"
               >
-                {/* Modify this div for the icon */}
-                <div className="w-12 h-12 md:w-14 md:h-14"> {/* Increased size */}
+                <div className="w-9 h-9 md:w-10 md:h-10">
                   <img 
                     src={import.meta.env.PROD ? '/portfolio/ai-assistant-active.png' : '/ai-assistant-active.png'}
                     alt="AI Assistant Online"
-                    className="w-full h-full object-cover" // Removed rounded-full class
+                    className="w-full h-full rounded-full object-cover"
                     onError={(e) => {
                       e.target.style.display = 'none';
                       e.target.parentElement.innerHTML = '👋';
