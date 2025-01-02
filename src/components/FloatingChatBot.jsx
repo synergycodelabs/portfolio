@@ -34,8 +34,11 @@ const SectionIndicator = ({ section, theme }) => {
 };
 
 const formatResponse = (content) => {
-  if (content.includes('1.')) {
-    const parts = content.split(/(?=\d+\.\s)/);
+  // Clean up markdown formatting
+  const cleanContent = content.replace(/\*\*/g, ''); // Remove all double asterisks
+
+  if (cleanContent.includes('1.')) {
+    const parts = cleanContent.split(/(?=\d+\.\s)/);
     const intro = parts[0].trim();
     const items = parts.slice(1);
 
@@ -49,8 +52,12 @@ const formatResponse = (content) => {
         {items.length > 0 && (
           <div className="flex flex-col gap-3 w-full">
             {items.map((item, index) => {
+              // Split the item into number and content more carefully
               const [number, ...contentParts] = item.trim().split(/\s(.+)/);
-              const content = contentParts.join(' ');
+              const content = contentParts
+                .join(' ')
+                .replace(/\*\*/g, '') // Clean any remaining asterisks
+                .trim();
               
               return (
                 <div key={index} className="flex gap-2 text-sm w-full">
@@ -69,9 +76,10 @@ const formatResponse = (content) => {
     );
   }
   
+  // For non-list responses, clean and return
   return (
     <div className="text-sm w-full text-left whitespace-pre-wrap">
-      {content}
+      {cleanContent}
     </div>
   );
 };
