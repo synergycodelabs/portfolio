@@ -1,129 +1,79 @@
 // src/utils/connectionHelper.js
 import { getApiUrl } from '@/config/api';
 
-const getBrowserInfo = () => {
-  const isMobile = /iPhone|iPad|iPod|Android|Windows Phone|IEMobile/i.test(navigator.userAgent);
-  const isEdge = /Edg/i.test(navigator.userAgent);
-  const isFirefox = /firefox/i.test(navigator.userAgent);
-  return { isMobile, isEdge, isFirefox };
-};
+const getBrowserInfo = () => ({
+  isMobile: /iPhone|iPad|iPod|Android|Windows Phone|IEMobile/i.test(navigator.userAgent),
+  isEdge: /Edg/i.test(navigator.userAgent)
+});
 
-const mobileRequest = async (url, options = {}) => {
-  const fetchOptions = {
-    ...options,
-    mode: 'cors',
-    credentials: 'omit',
-    headers: {
-      ...options.headers,
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    }
-  };
-
+// Simplified mobile fetch with better error handling
+const safeFetch = async (url, options = {}) => {
   try {
-    const response = await fetch(url, fetchOptions);
+    const response = await fetch(url, {
+      ...options,
+      mode: 'cors',
+      credentials: 'omit',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        ...options.headers
+      }
+    });
+
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
     }
-    const data = await response.json();
-    return data;
+
+    return response.json();
   } catch (error) {
-    console.error('Mobile request failed:', error);
+    console.error('Fetch failed:', { url, error });
     throw error;
   }
 };
 
 export const checkServerConnection = async () => {
+  const browserInfo = getBrowserInfo();
+  console.log('Browser details:', {
+    ...browserInfo,
+    userAgent: navigator.userAgent
+  });
+
   try {
-    const { isMobile } = getBrowserInfo();
-    console.log('Browser details:', { 
-      ...getBrowserInfo(), 
-      userAgent: navigator.userAgent 
-    });
-
     const url = getApiUrl('status');
-    console.log('Checking status at:', url);
-
-    if (isMobile) {
-      const data = await mobileRequest(url);
-      return {
-        status: data.status || 'online',
-        secure: true,
-        error: null
-      };
-    }
-
-    // Desktop browsers
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: { 'Accept': 'application/json' }
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-
-    const data = await response.json();
+    const data = await safeFetch(url);
+    
     return {
-      status: data.status,
-      secure: data.secure,
+      status: data.status || 'online',
+      secure: true,
       error: null
     };
   } catch (error) {
-    console.error('Connection check failed:', error);
     return {
       status: 'offline',
       secure: false,
-      error: error.message
+      error: 'Connection failed'
     };
   }
 };
 
 export const sendChatMessage = async (message) => {
   try {
-    const { isMobile } = getBrowserInfo();
     const url = getApiUrl('chat');
-    console.log('Sending chat message to:', url);
-
-    if (isMobile) {
-      const data = await mobileRequest(url, {
-        method: 'POST',
-        body: JSON.stringify({ message })
-      });
-      
-      return {
-        success: true,
-        response: data.response || data.message || 'No response received',
-        error: null
-      };
-    }
-
-    // Desktop browsers
-    const response = await fetch(url, {
+    const data = await safeFetch(url, {
       method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
       body: JSON.stringify({ message })
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-
-    const data = await response.json();
     return {
       success: true,
       response: data.response || data.message || 'No response received',
       error: null
     };
   } catch (error) {
-    console.error('Chat request failed:', error);
     return {
       success: false,
       response: null,
-      error: 'Unable to connect to the server. Please check your internet connection and try again.'
+      error: 'Unable to connect. Please try again.'
     };
   }
 };
