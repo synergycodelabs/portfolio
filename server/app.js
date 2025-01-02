@@ -27,36 +27,22 @@ app.use(
   })
 );
 
-/**
- * Environment-specific CORS configuration with Edge mobile override.
- *
- * 1) We detect if user-agent is Edge (Edg/i).
- * 2) If yes, we allow '*' for origin, methods, and headers.
- * 3) Otherwise, we allow environment.ALLOWED_ORIGINS.
- */
+// In app.js, replace the current CORS configuration with:
 app.use((req, res, next) => {
-  const userAgent = req.headers['user-agent'];
-  const isEdge = /Edg/i.test(userAgent);
-
-  if (isEdge) {
-    // Very permissive for Edge Mobile
+    const userAgent = req.headers['user-agent'];
+    const isEdge = /Edg/i.test(userAgent);
+  
+    // Set CORS headers
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.header('Access-Control-Allow-Headers', '*');
-    res.header('Access-Control-Max-Age', '86400');
-  } else {
-    // Standard approach for other browsers (adjust ALLOWED_ORIGINS to your domains)
-    res.header('Access-Control-Allow-Origin', environment.ALLOWED_ORIGINS);
-    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
-  }
-
-  // Handle preflight
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
-  next();
-});
+    
+    // Handle preflight
+    if (req.method === 'OPTIONS') {
+      return res.sendStatus(204);
+    }
+    next();
+  });
 
 /**
  * Additional cors() usage – fallback approach. 
