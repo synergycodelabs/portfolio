@@ -265,6 +265,11 @@ const FloatingChatBot = ({ theme = 'dark' }) => {
     }
   }, [isOpen]);
 
+  const handleClose = () => {
+    setIsOpen(false);
+    setIsExpanded(false);  // Reset expanded state
+  };
+
   const handleSend = async () => {
     if (!input.trim() || !isBusinessHours() || serverStatus !== 'online') return;
 
@@ -358,28 +363,28 @@ const FloatingChatBot = ({ theme = 'dark' }) => {
           </div>
         )}
         {/* Chat Window */}
-        {isOpen && (
-          <div
-            className={`${
-              isExpanded 
-                ? 'w-[32rem] md:w-[48rem] h-[36rem]' 
-                : 'w-80 md:w-96 h-[500px]'
-            } rounded-lg shadow-xl flex flex-col ${
-              theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'
-            } ${isTransitioning ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}
-            transition-all duration-300 ease-in-out`}
-          >
+          {isOpen && (
+            <div
+              className={`${
+                isExpanded 
+                  ? 'fixed inset-0 md:relative md:w-[48rem] md:h-[36rem]' 
+                  : 'w-80 md:w-96 h-[500px]'
+              } rounded-lg shadow-xl flex flex-col ${
+                theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'
+              } ${isTransitioning ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}
+              transition-all duration-300 ease-in-out`}
+            >
             {/* Header */}
-            <div className={`p-4 flex justify-between items-center border-b ${
-              theme === 'dark' ? 'border-gray-700' : 'border-gray-200'
-            }`}>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsExpanded(!isExpanded)}
-                  className={`${theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100'} p-2`}
-                >
+              <div className={`p-4 flex justify-between items-center border-b ${
+                theme === 'dark' ? 'border-gray-700' : 'border-gray-200'
+              }`}>
+                <div className="flex items-center gap-2 sticky top-0 z-50">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsExpanded(!isExpanded)}
+                    className={`${theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100'} p-2`}
+                  >
                   {isExpanded ? (
                     <Minimize2 className="h-4 w-4" />
                   ) : (
@@ -396,7 +401,7 @@ const FloatingChatBot = ({ theme = 'dark' }) => {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setIsOpen(false)}
+                onClick={handleClose}  // Update this line
                 className={theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}
               >
                 <X className="h-5 w-5" />
