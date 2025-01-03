@@ -36,11 +36,36 @@ const SectionIndicator = ({ section, theme }) => {
 
 // src/components/FloatingChatBot.jsx
 const formatResponse = (content) => {
-  // Clean up markdown formatting
+  // Clean up and identify special formatting
   const cleanContent = content.replace(/\*\*/g, '');
 
-  // Case 1: Numbered list with parentheses - e.g., "1) Core Competencies"
-  if (cleanContent.includes(')')) {
+  // Helper to format bullet points with different symbols
+  const formatBulletPoint = (text, symbol = '•') => (
+    <div className="flex gap-2 text-xs md:text-sm w-full pl-2">
+      <span className="flex-shrink-0">{symbol}</span>
+      <span className="flex-1">{text.trim()}</span>
+    </div>
+  );
+
+  // Case 1: Detect bullet points with dashes
+  if (cleanContent.includes('\n-')) {
+    const [intro, ...bulletPoints] = cleanContent.split('\n-');
+    return (
+      <div className="flex flex-col gap-2 md:gap-3 w-full">
+        {intro && (
+          <div className="text-xs md:text-sm w-full text-left mb-2">
+            {intro.trim()}
+          </div>
+        )}
+        <div className="flex flex-col gap-2 md:gap-3 w-full">
+          {bulletPoints.map((point, index) => formatBulletPoint(point))}
+        </div>
+      </div>
+    );
+  }
+
+  // Case 2: Numbered list with parentheses "1)" format
+  if (cleanContent.match(/\d+\)/)) {
     const parts = cleanContent.split(/(?=\d+\))/);
     const intro = parts[0].trim();
     const items = parts.slice(1);
@@ -72,9 +97,9 @@ const formatResponse = (content) => {
     );
   }
 
-  // Case 2: Numbered list with periods - e.g., "1. First item"
-  if (cleanContent.includes('1.')) {
-    const parts = cleanContent.split(/(?=\d+\.\s)/);
+  // Case 3: Numbered list with periods and sub-items
+  if (cleanContent.match(/\d+\./)) {
+    const parts = cleanContent.split(/(?=\d+\.)/);
     const intro = parts[0].trim();
     const items = parts.slice(1);
 
@@ -85,19 +110,30 @@ const formatResponse = (content) => {
             {intro}
           </div>
         )}
-        <div className="flex flex-col gap-2 md:gap-3 w-full pl-2">
+        <div className="flex flex-col gap-3 md:gap-4 w-full pl-2">
           {items.map((item, index) => {
-            const [number, ...contentParts] = item.trim().split(/\s(.+)/);
+            // Split into main point and sub-points
+            const [mainPoint, ...subPoints] = item.split(/(?=\s*-\s)/);
+            const [number, ...contentParts] = mainPoint.trim().split(/\s(.+)/);
             const content = contentParts.join(' ').trim();
-            
+
             return (
-              <div key={index} className="flex gap-2 text-xs md:text-sm w-full">
-                <span className="flex-shrink-0 font-medium">
-                  {number}
-                </span>
-                <span className="flex-1">
-                  {content}
-                </span>
+              <div key={index} className="flex flex-col gap-2">
+                <div className="flex gap-2 text-xs md:text-sm w-full">
+                  <span className="flex-shrink-0 font-medium">
+                    {number}
+                  </span>
+                  <span className="flex-1 font-medium">
+                    {content}
+                  </span>
+                </div>
+                {subPoints.length > 0 && (
+                  <div className="flex flex-col gap-1 pl-6">
+                    {subPoints.map((subPoint, subIndex) => (
+                      formatBulletPoint(subPoint.replace(/^-/, ''), '•')
+                    ))}
+                  </div>
+                )}
               </div>
             );
           })}
@@ -106,7 +142,7 @@ const formatResponse = (content) => {
     );
   }
   
-  // Case 3: Regular text
+  // Case 4: Regular text
   return (
     <div className="text-xs md:text-sm w-full text-left whitespace-pre-wrap">
       {cleanContent}
