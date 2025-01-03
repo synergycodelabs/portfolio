@@ -36,8 +36,43 @@ const SectionIndicator = ({ section, theme }) => {
 
 // src/components/FloatingChatBot.jsx
 const formatResponse = (content) => {
+  // Clean up markdown formatting
   const cleanContent = content.replace(/\*\*/g, '');
 
+  // Case 1: Numbered list with parentheses - e.g., "1) Core Competencies"
+  if (cleanContent.includes(')')) {
+    const parts = cleanContent.split(/(?=\d+\))/);
+    const intro = parts[0].trim();
+    const items = parts.slice(1);
+
+    return (
+      <div className="flex flex-col gap-2 md:gap-3 w-full">
+        {intro && (
+          <div className="text-xs md:text-sm w-full text-left mb-2">
+            {intro}
+          </div>
+        )}
+        <div className="flex flex-col gap-2 md:gap-3 w-full pl-2">
+          {items.map((item, index) => {
+            const itemContent = item.replace(/^\d+\)\s*/, '').trim();
+            
+            return (
+              <div key={index} className="flex gap-2 text-xs md:text-sm w-full">
+                <span className="flex-shrink-0 font-medium">
+                  {index + 1})
+                </span>
+                <span className="flex-1">
+                  {itemContent}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  // Case 2: Numbered list with periods - e.g., "1. First item"
   if (cleanContent.includes('1.')) {
     const parts = cleanContent.split(/(?=\d+\.\s)/);
     const intro = parts[0].trim();
@@ -46,36 +81,32 @@ const formatResponse = (content) => {
     return (
       <div className="flex flex-col gap-2 md:gap-3 w-full">
         {intro && (
-          <div className="text-xs md:text-sm w-full text-left mb-1 md:mb-2">
+          <div className="text-xs md:text-sm w-full text-left mb-2">
             {intro}
           </div>
         )}
-        {items.length > 0 && (
-          <div className="flex flex-col gap-2 md:gap-3 w-full">
-            {items.map((item, index) => {
-              const [number, ...contentParts] = item.trim().split(/\s(.+)/);
-              const content = contentParts
-                .join(' ')
-                .replace(/\*\*/g, '')
-                .trim();
-              
-              return (
-                <div key={index} className="flex gap-1.5 md:gap-2 text-xs md:text-sm w-full">
-                  <span className="flex-shrink-0 min-w-[1.25rem] md:min-w-[1.5rem] text-left">
-                    {number}
-                  </span>
-                  <span className="flex-1 text-left">
-                    {content}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        )}
+        <div className="flex flex-col gap-2 md:gap-3 w-full pl-2">
+          {items.map((item, index) => {
+            const [number, ...contentParts] = item.trim().split(/\s(.+)/);
+            const content = contentParts.join(' ').trim();
+            
+            return (
+              <div key={index} className="flex gap-2 text-xs md:text-sm w-full">
+                <span className="flex-shrink-0 font-medium">
+                  {number}
+                </span>
+                <span className="flex-1">
+                  {content}
+                </span>
+              </div>
+            );
+          })}
+        </div>
       </div>
     );
   }
   
+  // Case 3: Regular text
   return (
     <div className="text-xs md:text-sm w-full text-left whitespace-pre-wrap">
       {cleanContent}
