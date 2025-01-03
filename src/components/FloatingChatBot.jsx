@@ -34,9 +34,9 @@ const SectionIndicator = ({ section, theme }) => {
   );
 };
 
+// src/components/FloatingChatBot.jsx
 const formatResponse = (content) => {
-  // Clean up markdown formatting
-  const cleanContent = content.replace(/\*\*/g, ''); // Remove all double asterisks
+  const cleanContent = content.replace(/\*\*/g, '');
 
   if (cleanContent.includes('1.')) {
     const parts = cleanContent.split(/(?=\d+\.\s)/);
@@ -44,25 +44,24 @@ const formatResponse = (content) => {
     const items = parts.slice(1);
 
     return (
-      <div className="flex flex-col gap-3 w-full">
+      <div className="flex flex-col gap-2 md:gap-3 w-full">
         {intro && (
-          <div className="text-sm w-full text-left mb-2">
+          <div className="text-xs md:text-sm w-full text-left mb-1 md:mb-2">
             {intro}
           </div>
         )}
         {items.length > 0 && (
-          <div className="flex flex-col gap-3 w-full">
+          <div className="flex flex-col gap-2 md:gap-3 w-full">
             {items.map((item, index) => {
-              // Split the item into number and content more carefully
               const [number, ...contentParts] = item.trim().split(/\s(.+)/);
               const content = contentParts
                 .join(' ')
-                .replace(/\*\*/g, '') // Clean any remaining asterisks
+                .replace(/\*\*/g, '')
                 .trim();
               
               return (
-                <div key={index} className="flex gap-2 text-sm w-full">
-                  <span className="flex-shrink-0 min-w-[1.5rem] text-left">
+                <div key={index} className="flex gap-1.5 md:gap-2 text-xs md:text-sm w-full">
+                  <span className="flex-shrink-0 min-w-[1.25rem] md:min-w-[1.5rem] text-left">
                     {number}
                   </span>
                   <span className="flex-1 text-left">
@@ -77,9 +76,8 @@ const formatResponse = (content) => {
     );
   }
   
-  // For non-list responses, clean and return
   return (
-    <div className="text-sm w-full text-left whitespace-pre-wrap">
+    <div className="text-xs md:text-sm w-full text-left whitespace-pre-wrap">
       {cleanContent}
     </div>
   );
