@@ -1,4 +1,8 @@
+# Portfolio API Docker Compose Configuration
+version: '3.8'
+
 services:
+  # NGINX reverse proxy
   nginx:
     container_name: portfolio-nginx
     build:
@@ -6,42 +10,36 @@ services:
       dockerfile: Dockerfile
     ports:
       - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/conf/default.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./nginx/html:/usr/share/nginx/html
-      - ./nginx/certbot/www:/var/www/certbot
-      - ./nginx/certbot/conf:/etc/letsencrypt
-      - ./nginx/logs:/var/log/nginx
     environment:
-      - NGINX_ENTRYPOINT_QUIET_LOGS=0
-    command: [nginx-debug, '-g', 'daemon off;']
-    restart: unless-stopped
+      - NGINX_HOST=api.synergycodelabs.com
+    # Removed volume mount to use copied config
     depends_on:
       - api
     networks:
-      - app-network
+      - portfolio-network
+    restart: unless-stopped
 
+  # API service
   api:
     container_name: portfolio-api
     build:
       context: ./server
       dockerfile: Dockerfile
-    ports:
-      - "3002:3002"
-    volumes:
-      - ./server:/app
-      - /app/node_modules
+    expose:
+      - "3002"
+    env_file:
+      - ./server/.env
     environment:
       - NODE_ENV=production
       - PORT=3002
       - DEBUG=true
       - HOST=0.0.0.0
-    command: node server.js
-    restart: unless-stopped
     networks:
-      - app-network
+      - portfolio-network
+    restart: unless-stopped
 
+# Network definition
 networks:
-  app-network:
+  portfolio-network:
+    name: portfolio-network
     driver: bridge

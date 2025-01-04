@@ -2,7 +2,6 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
   base: '/portfolio/',
@@ -13,10 +12,11 @@ export default defineConfig({
   },
   server: {
     port: 3001,
+    host: '0.0.0.0', // Change this
     open: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:3002',
+        target: 'http://portfolio-api:3002', // Change this to use container name
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/api/, '/api'),
@@ -44,5 +44,14 @@ export default defineConfig({
         assetFileNames: 'assets/[name].[hash][extname]'
       }
     }
+  },
+  // Add this section to handle CORS and other potential issues
+  optimizeDeps: {
+    include: ['react', 'react-dom'],
+  },
+  preview: {
+    port: 3001,
+    strictPort: true,
+    host: true,
   }
 })

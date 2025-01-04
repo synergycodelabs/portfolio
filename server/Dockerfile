@@ -1,18 +1,25 @@
 FROM node:18-alpine
 
-WORKDIR /app
+# Set working directory
+WORKDIR /usr/src/app
 
-# Copy package files
+# Copy package files first
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install
+# Install production dependencies only
+RUN npm ci --only=production
 
-# Copy source code
+# Copy application files
 COPY . .
+
+# Debug: List contents
+RUN ls -la
 
 # Expose port
 EXPOSE 3002
 
-# Start the server
+# Set Node options for ESM
+ENV NODE_OPTIONS="--experimental-specifier-resolution=node --es-module-specifier-resolution=node"
+
+# Start the application
 CMD ["node", "server.js"]

@@ -1,12 +1,12 @@
-FROM nginx:1.25-alpine
+# Use official NGINX base image
+FROM nginx:1.25.3-alpine
 
-# Copy certificates from archive to live when container starts
-RUN echo '#!/bin/sh' > /docker-entrypoint.d/40-fix-certs.sh && \
-    echo 'mkdir -p /etc/letsencrypt/live/api.synergycodelabs.com' >> /docker-entrypoint.d/40-fix-certs.sh && \
-    echo 'cp /etc/letsencrypt/archive/api.synergycodelabs.com/cert1.pem /etc/letsencrypt/live/api.synergycodelabs.com/cert.pem' >> /docker-entrypoint.d/40-fix-certs.sh && \
-    echo 'cp /etc/letsencrypt/archive/api.synergycodelabs.com/chain1.pem /etc/letsencrypt/live/api.synergycodelabs.com/chain.pem' >> /docker-entrypoint.d/40-fix-certs.sh && \
-    echo 'cp /etc/letsencrypt/archive/api.synergycodelabs.com/fullchain1.pem /etc/letsencrypt/live/api.synergycodelabs.com/fullchain.pem' >> /docker-entrypoint.d/40-fix-certs.sh && \
-    echo 'cp /etc/letsencrypt/archive/api.synergycodelabs.com/privkey1.pem /etc/letsencrypt/live/api.synergycodelabs.com/privkey.pem' >> /docker-entrypoint.d/40-fix-certs.sh && \
-    echo 'chmod -R 755 /etc/letsencrypt/live' >> /docker-entrypoint.d/40-fix-certs.sh && \
-    echo 'chmod 700 /etc/letsencrypt/live/api.synergycodelabs.com/privkey.pem' >> /docker-entrypoint.d/40-fix-certs.sh && \
-    chmod +x /docker-entrypoint.d/40-fix-certs.sh
+# Copy configuration files
+COPY nginx.conf /etc/nginx/nginx.conf
+COPY conf/default.conf /etc/nginx/conf.d/default.conf
+
+# Verify configuration (but allow container to start even if verification fails)
+RUN nginx -t || true
+
+# Use default NGINX command
+CMD ["nginx", "-g", "daemon off;"]

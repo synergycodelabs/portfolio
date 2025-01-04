@@ -1,0 +1,29 @@
+### Test Basic Greeting
+POST http://localhost:3000/api/chat
+Content-Type: application/json
+
+{
+    "message": "Hello, tell me about yourself"
+}
+
+### Test Project Inquiry
+POST http://localhost:3000/api/chat
+Content-Type: application/json
+
+{
+    "message": "What projects have you worked on?"
+}
+
+### Test Skills Inquiry
+POST http://localhost:3000/api/chat
+Content-Type: application/json
+
+{
+    "message": "What are your technical skills?"
+}
+
+### Test Invalid Request (Missing Message)
+POST http://localhost:3000/api/chat
+Content-Type: application/json
+
+{}
