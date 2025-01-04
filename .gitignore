@@ -7,10 +7,12 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies and build
 node_modules
 dist
 dist-ssr
 *.local
+.npm-cache/
 
 # Editor directories and files
 .vscode/*
@@ -22,6 +24,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+portfolio.code-workspace
 
 # Environment variables
 .env
@@ -29,10 +32,15 @@ dist-ssr
 .env.development.local
 .env.test.local
 .env.production.local
+server/.env.development
 
 # SSL and certificates
 server/ssl/
 certbot/
+*.pem
+debug-acme.sh
+init-ssl.sh
+setup-ssl.sh
 
 # Build output
 nginx/html/
@@ -40,5 +48,14 @@ nginx/html/
 # Backup files
 *.bak*
 *.bak
-server/.env.development
 backups/
+
+# Development containers
+.devcontainer/
+.python-version
+
+# WSL configuration
+.wslconfig
+
+# Test files
+test.txt
