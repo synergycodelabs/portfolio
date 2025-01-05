@@ -27,6 +27,8 @@ dist-ssr
 portfolio.code-workspace
 
 # Environment variables
+*.pid
+.env.backup
 .env
 .env.local
 .env.development.local
