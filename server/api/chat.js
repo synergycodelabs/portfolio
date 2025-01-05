@@ -11,6 +11,9 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+// At the top, import logger
+import logger from '../utils/logger.js';
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method not allowed' });
@@ -18,32 +21,54 @@ export default async function handler(req, res) {
 
   try {
     const { message } = req.body;
+    
+    if (!message) {
+      return res.status(400).json({ message: 'Message is required' });
+    }
+
+    if (!process.env.OPENAI_API_KEY) {
+      logger.error('OpenAI API key is missing');
+      return res.status(500).json({ message: 'Server configuration error' });
+    }
 
     // Get embedding for the user's question
-    const questionEmbedding = await openai.embeddings.create({
-      model: "text-embedding-3-small",
-      input: message,
-    });
+    try {
+      const questionEmbedding = await openai.embeddings.create({
+        model: "text-embedding-3-small",
+        input: message,
+      });
+      
+      // Log successful embedding
+      logger.info(`Generated embedding for message: ${message.substring(0, 50)}...`);
 
-    // Get relevant context from stored embeddings
-    const context = await getRelevantContext(questionEmbedding.data[0].embedding);
+      // Get relevant context
+      const context = await getRelevantContext(questionEmbedding.data[0].embedding);
+      
+      // Generate chat completion
+      const completion = await openai.chat.completions.create({
+        model: "ft:gpt-4o-mini-2024-07-18:aplusg:portfolio-bot-v1:AjLmxhRS",
+        messages: [
+          {
+            role: "system",
+            content: `You are a helpful assistant for Angel's portfolio website. Use the following context to answer questions about Angel's experience, projects, and skills: ${context}`,
+          },
+          { role: "user", content: message },
+        ],
+      });
 
-    // Generate chat completion
-    const completion = await openai.chat.completions.create({
-      model: "ft:gpt-4o-mini-2024-07-18:aplusg:portfolio-bot-v1:AjLmxhRS",  // Use your preferred model
-      messages: [
-        {
-          role: "system",
-          content: `You are a helpful assistant for Angel's portfolio website. Use the following context to answer questions about Angel's experience, projects, and skills: ${context}`,
-        },
-        { role: "user", content: message },
-      ],
-    });
+      return res.status(200).json({ response: completion.choices[0].message.content });
+      
+    } catch (openaiError) {
+      logger.error('OpenAI API error:', openaiError);
+      return res.status(500).json({ message: 'Error communicating with AI service' });
+    }
 
-    return res.status(200).json({ response: completion.choices[0].message.content });
   } catch (error) {
-    console.error('Error:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+    logger.error('General error:', error);
+    return res.status(500).json({ 
+      message: 'Internal server error',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 }
 

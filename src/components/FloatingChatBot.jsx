@@ -348,16 +348,20 @@ const FloatingChatBot = ({ theme = 'dark' }) => {
               variant="ghost"
             >
               <div className="w-10 h-20 md:w-10 md:h-16">
-                <img 
-                  src={import.meta.env.PROD ? '/portfolio/ai-assistant-active.png' : '/ai-assistant-active.png'}
-                  alt="AI Assistant Online"
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
+              <img 
+                src={import.meta.env.PROD ? '/portfolio/ai-assistant-active.png' : '/ai-assistant-active.png'}
+                alt="AI Assistant Online"
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  if (e.target && e.target.parentElement) {
                     e.target.style.display = 'none';
                     e.target.parentElement.innerHTML = '👋';
-                    e.target.parentElement.classList.add('text-2xl');
-                  }}
-                />
+                    if (e.target.parentElement.classList) {
+                      e.target.parentElement.classList.add('text-2xl');
+                    }
+                  }
+                }}
+              />
               </div>
             </Button>
           </div>

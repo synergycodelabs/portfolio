@@ -19,16 +19,23 @@ const environment = {
   API_PREFIX: process.env.API_PREFIX || '/api',
 
   // CORS settings
-  CORS_ORIGIN: process.env.CORS_ORIGIN || 'http://localhost:3001',
-  ALLOWED_ORIGINS: process.env.NODE_ENV === 'production' 
+  CORS_ORIGIN: process.env.CORS_ORIGIN || 'http://localhost',
+  ALLOWED_ORIGINS: process.env.NODE_ENV === 'production'
     ? [
         'https://synergycodelabs.github.io',
         'https://www.synergycodelabs.github.io',
         'https://angel.synergycodelabs.com',
+        'http://localhost',
         'http://localhost:3001',
-        'http://localhost:3003'
+        'http://localhost:3003',
+        'http://192.168.1.172:3001'  // Add your local IP
       ]
-    : ['http://localhost:3001', 'http://localhost:3003'],
+    : [
+        'http://localhost',
+        'http://localhost:3001',
+        'http://localhost:3003',
+        'http://192.168.1.172:3001'  // Add your local IP
+      ],
 
   // OpenAI configuration  
   OPENAI_API_KEY: process.env.OPENAI_API_KEY,

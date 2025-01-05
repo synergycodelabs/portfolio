@@ -7,10 +7,21 @@ import logger from './utils/logger.js';
 // Development CORS settings
 if (environment.NODE_ENV === 'development') {
   app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', 'http://localhost:3001');
+    const allowedOrigins = [
+      'http://localhost',
+      'http://localhost:3001',
+      'http://192.168.1.172:3001'  // Add your local IP
+    ];
+    const origin = req.headers.origin;
+    
+    if (allowedOrigins.includes(origin)) {
+      res.header('Access-Control-Allow-Origin', origin);
+    }
+    
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.header('Access-Control-Allow-Credentials', 'true');
+    
     if (req.method === 'OPTIONS') {
       return res.sendStatus(204);
     }
