@@ -1,8 +1,8 @@
 // src/config/api.js
 const getBaseUrl = () => {
   if (import.meta.env.PROD) {
-    // Use your DNS with custom port in production
-    return 'https://api.synergycodelabs.com:48763';
+    // Use HTTP for now (we can add HTTPS later with SSL)
+    return 'http://api.synergycodelabs.com:48763';
   }
   // Use HTTP for local development
   return 'http://localhost:3003';
