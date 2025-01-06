@@ -4,30 +4,23 @@ import app from './app.js';
 import environment from './config/environment.js';
 import logger from './utils/logger.js';
 
-// Development CORS settings
-if (environment.NODE_ENV === 'development') {
-  app.use((req, res, next) => {
-    const allowedOrigins = [
-      'http://localhost',
-      'http://localhost:3001',
-      'http://192.168.1.172:3001'  // Add your local IP
-    ];
-    const origin = req.headers.origin;
-    
-    if (allowedOrigins.includes(origin)) {
-      res.header('Access-Control-Allow-Origin', origin);
-    }
-    
-    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    res.header('Access-Control-Allow-Credentials', 'true');
-    
-    if (req.method === 'OPTIONS') {
-      return res.sendStatus(204);
-    }
-    next();
-  });
-}
+// CORS settings for all environments
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  
+  if (environment.ALLOWED_ORIGINS.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+  
+  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+  next();
+});
 
 // Create HTTP server
 const httpServer = http.createServer(app);
@@ -36,19 +29,19 @@ const httpServer = http.createServer(app);
 httpServer.listen(environment.PORT, environment.HOST, () => {
   logger.info(`Server running on ${environment.HOST}:${environment.PORT}`);
 });
-  
-  // Handle graceful shutdown
-  const gracefulShutdown = () => {
-      httpServer.close(() => {
-          logger.info('Server closed');
-      });
-  
-      // Give processes 10 seconds to close gracefully
-      setTimeout(() => {
-          process.exit(0);
-      }, 10000);
-  };
-  
-  // Handle termination signals
-  process.on('SIGTERM', gracefulShutdown);
-  process.on('SIGINT', gracefulShutdown);
+
+// Handle graceful shutdown
+const gracefulShutdown = () => {
+    httpServer.close(() => {
+        logger.info('Server closed');
+    });
+
+    // Give processes 10 seconds to close gracefully
+    setTimeout(() => {
+        process.exit(0);
+    }, 10000);
+};
+
+// Handle termination signals
+process.on('SIGTERM', gracefulShutdown);
+process.on('SIGINT', gracefulShutdown);

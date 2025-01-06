@@ -1,7 +1,7 @@
 // src/config/api.js
 const getBaseUrl = () => {
   if (import.meta.env.PROD) {
-    // Force HTTPS in production
+    // Use your DNS in production
     return 'https://api.synergycodelabs.com';
   }
   // Use HTTP for local development
@@ -15,7 +15,7 @@ export const getApiUrl = (endpoint) => {
     chat: '/api/chat'
   };
   const url = `${baseUrl}${endpoints[endpoint]}`;
-  console.log('API URL:', url); // Add logging to help debug
+  console.log('API URL:', url);
   return url;
 };
 
