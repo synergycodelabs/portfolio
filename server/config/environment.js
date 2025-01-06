@@ -25,17 +25,21 @@ const environment = {
         'https://synergycodelabs.github.io',
         'https://www.synergycodelabs.github.io',
         'https://angel.synergycodelabs.com',
-        'http://localhost',
-        'http://localhost:3001',
-        'http://localhost:3003',
-        'http://192.168.1.172:3001'  // Add your local IP
+        'https://api.synergycodelabs.com',
+        'https://api.synergycodelabs.com:48763'
       ]
     : [
         'http://localhost',
         'http://localhost:3001',
         'http://localhost:3003',
-        'http://192.168.1.172:3001'  // Add your local IP
-      ],
+        'http://192.168.1.152:3001',    // Windows IP
+        'http://192.168.1.152:3003',    // Windows IP - HTTP
+        'https://192.168.1.152:48763',  // Windows IP - HTTPS
+        'http://192.168.1.174:3001',    // WSL IP
+        'https://192.168.1.174:48763',  // WSL IP - HTTPS
+        'https://api.synergycodelabs.com',
+        'https://api.synergycodelabs.com:48763'
+    ],
 
   // OpenAI configuration  
   OPENAI_API_KEY: process.env.OPENAI_API_KEY,
