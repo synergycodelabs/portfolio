@@ -17,6 +17,13 @@
   // CORS middleware for all environments
   app.use((req, res, next) => {
     const origin = req.headers.origin;
+    console.log('Request:', {
+      origin,
+      method: req.method,
+      url: req.url,
+      isAllowed: environment.ALLOWED_ORIGINS.includes(origin),
+      environment: environment.NODE_ENV
+    });
     
     if (environment.ALLOWED_ORIGINS.includes(origin)) {
       res.header('Access-Control-Allow-Origin', origin);

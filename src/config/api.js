@@ -5,7 +5,7 @@ const getBaseUrl = () => {
     return 'https://api.synergycodelabs.com:48763';
   }
   // Use HTTP for local development
-  return 'http://localhost:3003';
+  return 'http://localhost:3002';
 };
 
 export const getApiUrl = (endpoint) => {
