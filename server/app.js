@@ -14,24 +14,22 @@
   // Initialize Express app
   const app = express();
 
-  // Development CORS settings
-  if (environment.isDevelopment()) {
-    app.use((req, res, next) => {
-      const origin = req.headers.origin;
-      
-      if (environment.ALLOWED_ORIGINS.includes(origin)) {
-        res.header('Access-Control-Allow-Origin', origin);
-        res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-        res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-        res.header('Access-Control-Allow-Credentials', 'true');
-      }
-      
-      if (req.method === 'OPTIONS') {
-        return res.sendStatus(204);
-      }
-      next();
-    });
-  }
+  // CORS middleware for all environments
+  app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    
+    if (environment.ALLOWED_ORIGINS.includes(origin)) {
+      res.header('Access-Control-Allow-Origin', origin);
+      res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+      res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+      res.header('Access-Control-Allow-Credentials', 'true');
+    }
+    
+    if (req.method === 'OPTIONS') {
+      return res.sendStatus(204);
+    }
+    next();
+  });
   
   // Load embeddings on startup
   loadEmbeddings(__dirname);
