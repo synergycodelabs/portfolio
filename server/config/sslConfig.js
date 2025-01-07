@@ -1,13 +1,19 @@
 // config/sslConfig.js
 import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const SSL_CERT_PATH = '/etc/letsencrypt/live/api.synergycodelabs.com/fullchain.pem';
+const SSL_KEY_PATH = '/etc/letsencrypt/live/api.synergycodelabs.com/privkey.pem';
 
-const sslOptions = {
-  key: fs.readFileSync(path.join(__dirname, '..', 'ssl', 'private.key')),
-  cert: fs.readFileSync(path.join(__dirname, '..', 'ssl', 'certificate.crt'))
+const loadSSLConfig = () => {
+  try {
+    return {
+      cert: fs.readFileSync(SSL_CERT_PATH),
+      key: fs.readFileSync(SSL_KEY_PATH)
+    };
+  } catch (error) {
+    console.error('Error loading SSL configuration:', error);
+    throw error;
+  }
 };
 
-export default sslOptions;
+export default loadSSLConfig;
