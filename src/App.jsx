@@ -10,7 +10,7 @@ import Skills from './components/sections/Skills';
 import Projects from './components/sections/Projects';
 import Contact from './components/sections/Contact';
 import Resume from './components/sections/Resume';
-import FloatingChatBot from './components/FloatingChatBot';
+import FloatingChatBot from '@/components/FloatingChatBot/FloatingChatBot';
 import NotFound from './components/sections/NotFound';
 import MobileNav from './components/ui/MobileNav';
 
