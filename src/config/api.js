@@ -1,10 +1,8 @@
 // src/config/api.js
 const getBaseUrl = () => {
   if (import.meta.env.PROD) {
-    // Use HTTP for now (we can add HTTPS later with SSL)
     return 'https://api.synergycodelabs.com:48763';
   }
-  // Use HTTP for local development
   return 'http://localhost:3002';
 };
 
@@ -15,7 +13,12 @@ export const getApiUrl = (endpoint) => {
     chat: '/api/chat'
   };
   const url = `${baseUrl}${endpoints[endpoint]}`;
-  console.log('API URL:', url); // Keep logging for debugging
+  
+  // Only log in development
+  if (import.meta.env.DEV) {
+    console.log('API URL:', url);
+  }
+  
   return url;
 };
 
